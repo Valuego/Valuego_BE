@@ -2,15 +2,15 @@ package com.valuego.users.api;
 
 import com.valuego.global.common.code.SuccessCode;
 import com.valuego.global.common.template.ApiResTemplate;
+import com.valuego.users.api.dto.request.UserAgreeUpdateReqDto;
 import com.valuego.users.api.dto.response.UserInfoResDto;
 import com.valuego.users.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 
@@ -27,6 +27,14 @@ public class UserController {
     @GetMapping("/profile")
     public ApiResTemplate<UserInfoResDto> getUserInfo(Principal principal) {
         UserInfoResDto userInfoResDto = userService.getUserInfo(principal);
+        return ApiResTemplate.successResponse(SuccessCode.GET_SUCCESS, userInfoResDto);
+    }
+
+    @Operation(summary = "동의 항목 여부 수정", description = "로그인한 사용자가 동의 항목 여부를 수정합니다.")
+    @PatchMapping("/agree")
+    public ApiResTemplate<UserInfoResDto> updateUserAgree(Principal principal,
+                                                          @Valid @RequestBody UserAgreeUpdateReqDto userAgreeUpdateReqDto) {
+        UserInfoResDto userInfoResDto = userService.updateUserAgree(principal, userAgreeUpdateReqDto);
         return ApiResTemplate.successResponse(SuccessCode.GET_SUCCESS, userInfoResDto);
     }
 }

@@ -29,7 +29,8 @@ public enum ErrorCode {
     INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 리프레시 토큰입니다.", "AUTH-007"),
 
     // USER
-    USER_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 사용자를 찾을 수 없습니다.", "USER-001");
+    USER_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 사용자를 찾을 수 없습니다.", "USER-001"),
+    USER_NOTIFICATION_AGREE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 사용자의 동의 항목을 찾을 수 없습니다.", "USER-002");
 
     private final HttpStatus httpStatus;
     private final String message;
