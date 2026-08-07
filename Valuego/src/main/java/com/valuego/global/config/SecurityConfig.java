@@ -1,5 +1,6 @@
 package com.valuego.global.config;
 
+import com.valuego.oauth2.jwt.JwtAuthorizationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,6 +11,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -18,6 +20,8 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    private final JwtAuthorizationFilter jwtAuthorizationFilter;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
@@ -25,9 +29,12 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .cors(withDefaults())
+                .addFilterBefore(jwtAuthorizationFilter, UsernamePasswordAuthenticationFilter.class)
                 .sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
                         .requestMatchers("/test/**").permitAll()
+                        .requestMatchers("/api/v1/login/**").permitAll()
+                        .requestMatchers( "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated()   // 그 외 모든 요청은 인증 필요
                 )
                 .build();
