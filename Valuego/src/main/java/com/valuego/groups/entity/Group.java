@@ -32,6 +32,8 @@ public class Group extends BaseTimeEntity {
     private LocalDateTime endDate;
 
     private Integer memberCount;
+    
+    @Column(name = "group_link", nullable = false, unique = true)
     private String groupLink;
 
     @Enumerated(EnumType.STRING)

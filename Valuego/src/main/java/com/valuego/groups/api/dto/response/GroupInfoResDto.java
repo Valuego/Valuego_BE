@@ -7,6 +7,7 @@ import com.valuego.groups.entity.Enum.TransportType;
 import java.time.LocalDateTime;
 
 public record GroupInfoResDto(
+        Long groupId,
         String title,
         Destination destination,
         LocalDateTime startDate,
@@ -17,6 +18,7 @@ public record GroupInfoResDto(
 ) {
     public static GroupInfoResDto from(Group group) {
         return new GroupInfoResDto(
+                group.getId(),
                 group.getTitle(),
                 group.getDestination(),
                 group.getStartDate(),

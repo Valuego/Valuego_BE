@@ -29,7 +29,8 @@ public class GroupController {
 
     @Operation(summary = "그룹 생성", description = "로그인한 팀장이 그룹을 생성합니다.")
     @PostMapping
-    public ApiResTemplate<GroupInfoResDto> createGroup(Principal principal, GroupCreateReqDto groupCreateReqDto) {
+    public ApiResTemplate<GroupInfoResDto> createGroup(Principal principal,
+                                                       @RequestBody GroupCreateReqDto groupCreateReqDto) {
         GroupInfoResDto groupInfoResDto = groupService.createGroup(principal, groupCreateReqDto);
         return ApiResTemplate.successResponse(SuccessCode.CREATE_SUCCESS, groupInfoResDto);
     }
@@ -47,6 +48,6 @@ public class GroupController {
     @GetMapping
     public ApiResTemplate<GroupInfoResDto> getDetailGroup(Principal principal, @RequestParam Long groupId) {
         GroupInfoResDto groupInfoResDto = groupService.getDetailGroup(principal, groupId);
-        return ApiResTemplate.successResponse(SuccessCode.CREATE_SUCCESS, groupInfoResDto);
+        return ApiResTemplate.successResponse(SuccessCode.GET_SUCCESS, groupInfoResDto);
     }
 }
