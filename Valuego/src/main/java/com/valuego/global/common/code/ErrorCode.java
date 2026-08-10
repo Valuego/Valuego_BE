@@ -30,7 +30,12 @@ public enum ErrorCode {
 
     // USER
     USER_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 사용자를 찾을 수 없습니다.", "USER-001"),
-    USER_NOTIFICATION_AGREE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 사용자의 동의 항목을 찾을 수 없습니다.", "USER-002");
+    USER_NOTIFICATION_AGREE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 사용자의 동의 항목을 찾을 수 없습니다.", "USER-002"),
+
+    // GROUP
+    GROUP_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 그룹을 찾을 수 없습니다.", "GROUP-001"),
+    ALREADY_FINISHED_GROUP_EXCEPTION(HttpStatus.BAD_GATEWAY, "여행이 종료된 그룹입니다.", "GROUP-002"),
+    NO_REMAINING_MEMBER_COUNT(HttpStatus.BAD_GATEWAY, "그룹의 정원이 가득 찼습니다.", "GROUP-003");
 
     private final HttpStatus httpStatus;
     private final String message;
