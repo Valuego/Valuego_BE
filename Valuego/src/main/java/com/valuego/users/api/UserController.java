@@ -3,6 +3,7 @@ package com.valuego.users.api;
 import com.valuego.global.common.code.SuccessCode;
 import com.valuego.global.common.template.ApiResTemplate;
 import com.valuego.users.api.dto.request.UserAgreeUpdateReqDto;
+import com.valuego.users.api.dto.request.UserInfoUpdateReqDto;
 import com.valuego.users.api.dto.response.UserInfoResDto;
 import com.valuego.users.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,6 +29,13 @@ public class UserController {
     public ApiResTemplate<UserInfoResDto> getUserInfo(Principal principal) {
         UserInfoResDto userInfoResDto = userService.getUserInfo(principal);
         return ApiResTemplate.successResponse(SuccessCode.GET_SUCCESS, userInfoResDto);
+    }
+
+    @Operation(summary = "내 정보 수정", description = "로그인한 사용자가 닉네임, 고유 색상을 수정합니다.")
+    @PatchMapping("/profile")
+    public ApiResTemplate<UserInfoResDto> updateUserInfo(Principal principal, @Valid @RequestBody UserInfoUpdateReqDto userInfoUpdateReqDto) {
+        UserInfoResDto userInfoResDto = userService.updateUserInfo(principal, userInfoUpdateReqDto);
+        return ApiResTemplate.successResponse(SuccessCode.UPDATE_SUCCESS, userInfoResDto);
     }
 
     @Operation(summary = "동의 항목 여부 수정", description = "로그인한 사용자가 동의 항목 여부를 수정합니다.")
