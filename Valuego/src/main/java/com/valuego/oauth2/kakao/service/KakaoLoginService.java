@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.valuego.global.common.code.ErrorCode;
 import com.valuego.global.common.exception.BusinessException;
 import com.valuego.global.common.template.ApiResTemplate;
+import com.valuego.groups.entity.Enum.MemberColor;
 import com.valuego.oauth2.kakao.api.dto.KakaoToken;
 import com.valuego.oauth2.kakao.api.dto.KakaoUserInfo;
 import com.valuego.oauth2.kakao.api.dto.LoginInfoResDto;
@@ -123,6 +124,7 @@ public class KakaoLoginService {
                         .nickname(kakaoUserInfo.getProperties().getNickname())
                         .socialType(SocialType.KAKAO)
                         .userRole(UserRole.LEADER)
+                        .memberColor(MemberColor.BLUE)
                         .build()
         );
 

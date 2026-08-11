@@ -1,5 +1,6 @@
 package com.valuego.users.api.dto.response;
 
+import com.valuego.groups.entity.Enum.MemberColor;
 import com.valuego.users.entity.SocialType;
 import com.valuego.users.entity.User;
 import com.valuego.users.entity.UserRole;
@@ -13,6 +14,7 @@ public record UserInfoResDto(
         String profileImageUrl,
         SocialType socialType,
         UserRole userRole,
+        MemberColor memberColor,
         UserNotificationAgreeResDto notificationAgree
 ) {
     public static UserInfoResDto from(User user) {
@@ -23,6 +25,7 @@ public record UserInfoResDto(
                 .profileImageUrl(user.getProfileImageUrl())
                 .socialType(user.getSocialType())
                 .userRole(user.getUserRole())
+                .memberColor(user.getMemberColor())
                 .notificationAgree(UserNotificationAgreeResDto.from(user.getUserNotificationAgree()))
                 .build();
     }
