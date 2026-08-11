@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -77,7 +78,9 @@ public class GroupMemberService {
 
         groupMemberRepository.save(groupMember);
 
-        GroupGuestJoinResDto groupGuestJoinResDto = GroupGuestJoinResDto.from(groupMember);
+        List<GroupMember> groupMembers = groupMemberRepository.findAllByGroup(group);
+
+        GroupGuestJoinResDto groupGuestJoinResDto = GroupGuestJoinResDto.from(groupMember, groupMembers);
 
         // 게스트 토큰 유효 시간: 여행 종료일
         ResponseCookie guestCookie = createGuestCookie(guestAccessToken, group.getEndDate());
