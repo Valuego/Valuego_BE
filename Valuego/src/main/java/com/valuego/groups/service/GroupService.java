@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.Principal;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -60,7 +61,10 @@ public class GroupService {
 
         groupMemberRepository.save(groupMember);
 
-        return GroupInfoResDto.from(group);
+        // 현재 그룹 멤버 조회
+        List<GroupMember> groupMembers = groupMemberRepository.findAllByGroup(group);
+
+        return GroupInfoResDto.from(group, groupMembers);
     }
 
     // 그룹 상세 조회 - 팀장만
@@ -75,6 +79,9 @@ public class GroupService {
             );
         }
 
-        return GroupInfoResDto.from(group);
+        // 그룹 멤버 조회
+        List<GroupMember> groupMembers = groupMemberRepository.findAllByGroup(group);
+
+        return GroupInfoResDto.from(group, groupMembers);
     }
 }
