@@ -4,6 +4,7 @@ import com.valuego.global.common.template.BaseTimeEntity;
 import com.valuego.groups.entity.Enum.MemberColor;
 import com.valuego.groups.entity.Enum.MemberRole;
 import com.valuego.groups.entity.Enum.MemberStatus;
+import com.valuego.styles.entity.Style;
 import com.valuego.users.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -44,6 +45,9 @@ public class GroupMember extends BaseTimeEntity {
     @JoinColumn(name = "group_id", nullable = false)
     private Group group;
 
+    @OneToOne(mappedBy = "groupMember", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Style style;
+
     @Builder
     public GroupMember(MemberColor memberColor, MemberRole memberRole, MemberStatus memberStatus, String memberName, String guestToken, LocalDateTime guestTokenExpiresAt, User user, Group group) {
         this.memberColor = memberColor;
@@ -54,5 +58,9 @@ public class GroupMember extends BaseTimeEntity {
         this.user = user;
         this.guestTokenExpiresAt = guestTokenExpiresAt;
         this.group = group;
+    }
+
+    public void completePreference() {
+        this.memberStatus = MemberStatus.COMPLETED;
     }
 }
