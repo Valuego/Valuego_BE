@@ -5,6 +5,7 @@ import com.valuego.global.common.exception.BusinessException;
 import com.valuego.global.common.exception.EntityFinderException;
 import com.valuego.groups.api.dto.reqest.GroupCreateReqDto;
 import com.valuego.groups.api.dto.response.GroupInfoResDto;
+import com.valuego.groups.api.dto.response.GroupListResDto;
 import com.valuego.groups.entity.Group;
 import com.valuego.groups.entity.GroupMember;
 import com.valuego.groups.entity.Enum.MemberRole;
@@ -17,8 +18,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.Principal;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -83,5 +87,40 @@ public class GroupService {
         List<GroupMember> groupMembers = groupMemberRepository.findAllByGroup(group);
 
         return GroupInfoResDto.from(group, groupMembers);
+    }
+
+    // 전체 여행 리스트 조회(카카오 로그인 사용자)
+    public GroupListResDto getMyGroups(Principal principal) {
+        User user = entityFinderException.getUserFromPrincipal(principal);
+
+        // 내가 팀장인 그룹 전체 조회
+        List<Group> groups = groupRepository.findAllByLeaderOrderByStartDateDesc(user);
+
+        if (groups.isEmpty()) {
+            return new GroupListResDto(List.of(), List.of());
+        }
+
+        // 모든 그룹의 멤버를 한 번에 조회
+        List<GroupMember> groupMembers = groupMemberRepository.findAllByGroupIn(groups);
+
+        // groupId별 멤버 그룹화
+        Map<Long, List<GroupMember>> membersByGroupId = groupMembers.stream()
+                        .collect(Collectors.groupingBy(member -> member.getGroup().getId()));
+
+        LocalDateTime now = LocalDateTime.now();
+
+        // 진행 중인 여행 - 종료 날짜 dday 포함
+        List<GroupInfoResDto> ongoingGroups = groups.stream()
+                        .filter(group -> !now.isAfter(group.getEndDate()))
+                        .map(group -> GroupInfoResDto.from(group, membersByGroupId.getOrDefault(group.getId(), List.of())))
+                        .toList();
+
+        // 지난 여행
+        List<GroupInfoResDto> pastGroups = groups.stream()
+                        .filter(group -> now.isAfter(group.getEndDate()))
+                        .map(group -> GroupInfoResDto.from(group, membersByGroupId.getOrDefault(group.getId(), List.of())))
+                        .toList();
+
+        return new GroupListResDto(ongoingGroups, pastGroups);
     }
 }
