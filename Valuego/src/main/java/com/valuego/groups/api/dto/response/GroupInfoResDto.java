@@ -47,10 +47,14 @@ public record GroupInfoResDto(
                 endDate.toLocalDate()
         );
 
+        if (days > 0) {
+            return "D-" + days;
+        }
+
         if (days == 0) {
             return "D-Day";
         }
 
-        return "D-" + days;
+        return "D+" + Math.abs(days);
     }
 }
