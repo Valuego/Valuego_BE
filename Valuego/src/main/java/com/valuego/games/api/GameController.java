@@ -28,4 +28,13 @@ public class GameController {
                                    @CookieValue(value = "guestAccessToken", required = false) String guestToken) {
         return gameService.createLadder(principal, groupId, gameCreateReqDto, guestToken);
     }
+
+    @Operation(summary = "룰렛", description = "그룹 id로 판별하여 벌칙 생성 후 룰렛 돌리기")
+    @PostMapping("/roulette")
+    public GameResDto createRoulette(Principal principal,
+                                     @RequestParam Long groupId,
+                                     @Valid @RequestBody GameCreateReqDto gameCreateReqDto,
+                                     @CookieValue(value = "guestAccessToken", required = false) String guestToken) {
+        return gameService.createRoulette(principal, groupId, gameCreateReqDto, guestToken);
+    }
 }

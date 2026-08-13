@@ -22,6 +22,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 @RequiredArgsConstructor
@@ -58,6 +59,34 @@ public class GameService {
                 .gameType(GameType.LADDER)
                 .penalty(gameCreateReqDto.penalty())
                 .result(gameMemberResDtos)
+                .build();
+
+        gameRepository.save(game);
+
+        return GameResDto.from(game);
+    }
+
+    // 룰렛
+    public GameResDto createRoulette(Principal principal, Long groupId, GameCreateReqDto gameCreateReqDto, String guestToken) {
+        Group group = entityFinderException.getGroupById(groupId);
+        validateGroupMember(principal, guestToken, group);
+
+        List<GroupMember> members = groupMemberRepository.findAllByGroupId(groupId);
+        validateMembers(members);
+
+        GroupMember selectedMember = selectRandomMember(members);
+
+        List<GameMemberResDto> gameMemberResDto =
+                List.of(GameMemberResDto.from(
+                        selectedMember,
+                        "당첨"
+                ));
+
+        Game game = Game.builder()
+                .group(group)
+                .gameType(GameType.ROULETTE)
+                .penalty(gameCreateReqDto.penalty())
+                .result(gameMemberResDto)
                 .build();
 
         gameRepository.save(game);
@@ -130,5 +159,10 @@ public class GameService {
         Collections.shuffle(results);
 
         return results;
+    }
+
+    // 룰렛 결과 생성
+    private GroupMember selectRandomMember(List<GroupMember> members) {
+        return members.get(ThreadLocalRandom.current().nextInt(members.size()));
     }
 }
