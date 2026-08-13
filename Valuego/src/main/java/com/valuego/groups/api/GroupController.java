@@ -6,6 +6,7 @@ import com.valuego.groups.api.dto.reqest.GroupCreateReqDto;
 import com.valuego.groups.api.dto.reqest.GroupGuestInfoReqDto;
 import com.valuego.groups.api.dto.response.GroupGuestJoinResDto;
 import com.valuego.groups.api.dto.response.GroupInfoResDto;
+import com.valuego.groups.api.dto.response.GroupListResDto;
 import com.valuego.groups.service.GroupMemberService;
 import com.valuego.groups.service.GroupService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -41,6 +42,13 @@ public class GroupController {
     public ResponseEntity<ApiResTemplate<GroupGuestJoinResDto>> inviteGroup(@RequestParam String groupLink,
                                                                            @RequestBody GroupGuestInfoReqDto groupGuestInfoReqDto) {
         return groupMemberService.inviteGroup(groupLink, groupGuestInfoReqDto);
+    }
+
+    @Operation(summary = "그룹 전체 정보 조회", description = "로그인한 팀장(카카오 사용자)이 참여한 그룹 전체 정보를 조회합니다.")
+    @GetMapping("/all")
+    public ApiResTemplate<GroupListResDto> getMyGroups(Principal principal) {
+        GroupListResDto groupListResDto = groupService.getMyGroups(principal);
+        return ApiResTemplate.successResponse(SuccessCode.GET_SUCCESS, groupListResDto);
     }
 
     @Operation(summary = "그룹 상세 정보 조회", description = "로그인한 팀장이 그룹 상세 정보를 조회합니다.\n " +

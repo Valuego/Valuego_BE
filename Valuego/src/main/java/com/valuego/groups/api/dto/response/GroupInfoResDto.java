@@ -6,6 +6,7 @@ import com.valuego.groups.entity.Enum.TransportType;
 import com.valuego.groups.entity.GroupMember;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 public record GroupInfoResDto(
@@ -18,6 +19,7 @@ public record GroupInfoResDto(
         Integer memberCount,
         TransportType transportType,
         String groupLink,
+        String dDay,
         List<GroupMemberInfoResDto> members
 
 ) {
@@ -32,9 +34,23 @@ public record GroupInfoResDto(
                 group.getMemberCount(),
                 group.getTransportType(),
                 group.getGroupLink(),
+                calculateDDay(group.getEndDate()),
                 groupMembers.stream()
                         .map(GroupMemberInfoResDto::from)
                         .toList()
         );
+    }
+    private static String calculateDDay(LocalDateTime endDate) {
+
+        long days = ChronoUnit.DAYS.between(
+                LocalDateTime.now().toLocalDate(),
+                endDate.toLocalDate()
+        );
+
+        if (days == 0) {
+            return "D-Day";
+        }
+
+        return "D-" + days;
     }
 }
