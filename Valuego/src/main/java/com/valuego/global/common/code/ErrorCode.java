@@ -35,7 +35,12 @@ public enum ErrorCode {
     // GROUP
     GROUP_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 그룹을 찾을 수 없습니다.", "GROUP-001"),
     ALREADY_FINISHED_GROUP_EXCEPTION(HttpStatus.BAD_GATEWAY, "여행이 종료된 그룹입니다.", "GROUP-002"),
-    NO_REMAINING_MEMBER_COUNT(HttpStatus.BAD_GATEWAY, "그룹의 정원이 가득 찼습니다.", "GROUP-003");
+    NO_REMAINING_MEMBER_COUNT(HttpStatus.BAD_GATEWAY, "그룹의 정원이 가득 찼습니다.", "GROUP-003"),
+    GROUP_MEMBER_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "그룹의 멤버를 찾을 수 없습니다.", "GROUP-004"),
+
+    // STYLE
+    STYLE_ALREADY_EXISTS(HttpStatus.NOT_FOUND, "성향을 이미 입력하였습니다.", "STYLE-001"),
+    STYLE_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "성향을 찾을 수 없습니다.", "STYLE-002");
 
     private final HttpStatus httpStatus;
     private final String message;
