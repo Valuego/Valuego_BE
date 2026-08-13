@@ -1,6 +1,7 @@
 package com.valuego.games.service;
 
 import com.valuego.games.api.dto.request.GameCreateReqDto;
+import com.valuego.games.api.dto.response.GameMemberListResDto;
 import com.valuego.games.api.dto.response.GameMemberResDto;
 import com.valuego.games.api.dto.response.GameResDto;
 import com.valuego.games.entity.Game;
@@ -164,5 +165,17 @@ public class GameService {
     // 룰렛 결과 생성
     private GroupMember selectRandomMember(List<GroupMember> members) {
         return members.get(ThreadLocalRandom.current().nextInt(members.size()));
+    }
+
+    // 그룹별 게임 멤버 리스트 조회
+    public List<GameMemberListResDto> getGameMembers(Principal principal, Long groupId, String guestToken) {
+        Group group = entityFinderException.getGroupById(groupId);
+        validateGroupMember(principal, guestToken, group);
+
+        return groupMemberRepository
+                .findAllByGroupIdOrderByIdAsc(groupId)
+                .stream()
+                .map(GameMemberListResDto::from)
+                .toList();
     }
 }
