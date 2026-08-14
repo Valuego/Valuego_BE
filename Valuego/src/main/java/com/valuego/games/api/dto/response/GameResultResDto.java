@@ -7,15 +7,15 @@ import lombok.Builder;
 import java.util.List;
 
 @Builder
-public record GameResDto(
+public record GameResultResDto(
         Long gameId,
         Long groupId,
         GameType gameType,
         String penalty,
-        List<GameMemberResDto> result
+        List<GameMemberInfoResDto> result
 ) {
-    public static GameResDto from(Game game) {
-        return GameResDto.builder()
+    public static GameResultResDto from(Game game) {
+        return GameResultResDto.builder()
                 .gameId(game.getId())
                 .groupId(game.getGroup().getId())
                 .gameType(game.getGameType())
