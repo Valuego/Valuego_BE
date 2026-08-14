@@ -1,6 +1,6 @@
 package com.valuego.games.entity;
 
-import com.valuego.games.api.dto.response.GameMemberResDto;
+import com.valuego.games.api.dto.response.GameMemberInfoResDto;
 import com.valuego.global.common.template.BaseTimeEntity;
 import com.valuego.groups.entity.Group;
 import jakarta.persistence.*;
@@ -26,19 +26,19 @@ public class Game extends BaseTimeEntity {
     @Column(nullable = false)
     private GameType gameType;
 
-    @Column(nullable = false, length = 100)
+    @Column(length = 100)
     private String penalty;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(columnDefinition = "json", nullable = false)
-    private List<GameMemberResDto> result;
+    @Column(columnDefinition = "json")
+    private List<GameMemberInfoResDto> result;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id", nullable = false)
     private Group group;
 
     @Builder
-    public Game(GameType gameType, String penalty, List<GameMemberResDto> result, Group group) {
+    public Game(GameType gameType, String penalty, List<GameMemberInfoResDto> result, Group group) {
         this.gameType = gameType;
         this.penalty = penalty;
         this.result = result;
