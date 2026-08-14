@@ -1,5 +1,7 @@
 package com.valuego.global.common.exception;
 
+import com.valuego.games.entity.Game;
+import com.valuego.games.entity.repository.GameRepository;
 import com.valuego.global.common.code.ErrorCode;
 import com.valuego.groups.entity.Group;
 import com.valuego.groups.entity.GroupMember;
@@ -22,6 +24,7 @@ public class EntityFinderException {
     private final UserNotificationAgreeRepository userNotificationAgreeRepository;
     private final GroupRepository groupRepository;
     private final GroupMemberRepository groupMemberRepository;
+    private final GameRepository gameRepository;
 
     public User getUserFromPrincipal(Principal principal) {
         Long id = Long.parseLong(principal.getName());
@@ -61,5 +64,11 @@ public class EntityFinderException {
         return groupMemberRepository.findByGuestToken(guestToken)
                 .orElseThrow(() -> new BusinessException(ErrorCode.JWT_INVALID
                         , ErrorCode.JWT_INVALID.getMessage()));
+    }
+
+    public Game getGameById(Long gameId) {
+        return gameRepository.findById(gameId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.GAME_NOT_FOUND_EXCEPTION
+                        , ErrorCode.GAME_NOT_FOUND_EXCEPTION.getMessage()));
     }
 }

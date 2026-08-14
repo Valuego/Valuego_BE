@@ -48,6 +48,8 @@ dependencies {
 	// oauth
 	implementation 'com.google.code.gson:gson:2.13.1'
 
+	// openapi
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3'
 }
 
 tasks.named('test') {

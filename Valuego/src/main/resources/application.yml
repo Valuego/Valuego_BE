@@ -48,3 +48,7 @@ cookie:
 kakao:
   client-id: ${KAKAO_CLIENT_ID}
   redirect-uri: ${KAKAO_REDIRECT_URI}
+
+gemini:
+  api-key: ${GEMINI_API_KEY}
+  model: gemini-3.1-flash-lite

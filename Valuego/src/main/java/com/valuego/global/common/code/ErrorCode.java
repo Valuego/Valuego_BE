@@ -40,7 +40,12 @@ public enum ErrorCode {
 
     // STYLE
     STYLE_ALREADY_EXISTS(HttpStatus.NOT_FOUND, "성향을 이미 입력하였습니다.", "STYLE-001"),
-    STYLE_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "성향을 찾을 수 없습니다.", "STYLE-002");
+    STYLE_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "성향을 찾을 수 없습니다.", "STYLE-002"),
+
+    // GAME
+    GAME_QUIZ_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "퀴즈를 찾을 수 없습니다.", "GAME-001"),
+    GAME_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "게임을 찾을 수 없습니다.", "GAME-002"),
+    GAME_QUIZ_CREATE_EXCEPTION(HttpStatus.BAD_GATEWAY, "퀴즈 보기 생성에 실패했습니다.", "GAME-003");
 
     private final HttpStatus httpStatus;
     private final String message;
