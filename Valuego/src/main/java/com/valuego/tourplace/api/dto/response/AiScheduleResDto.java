@@ -1,35 +1,37 @@
 package com.valuego.tourplace.api.dto.response;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import com.valuego.travel.entity.Travel;
 
 import java.util.List;
 
-@Getter
-@NoArgsConstructor
-public class AiScheduleResDto {
+public record AiScheduleResDto(List<Day> days) {
+    public record Day(
+            Integer dayNumber,
+            List<Place> places
+    ) {}
 
-    private List<Day> days;
+    public record Place(
+            String contentId,
+            Integer scheduleOrder,
+            String placeType,
+            String reason
+    ) {}
 
-    @Getter
-    @NoArgsConstructor
-    public static class Day {
+    public static AiScheduleResDto from(Travel travel) {
+        List<Day> days = travel.getDays().stream()
+                .map(day -> new Day(
+                        day.getDayNumber(),
+                        day.getPlaces().stream()
+                                .map(place -> new Place(
+                                        place.getContentId(),
+                                        place.getScheduleOrder(),
+                                        place.getPlaceType(),
+                                        place.getReason()
+                                ))
+                                .toList()
+                ))
+                .toList();
 
-        private Integer dayNumber;
-
-        private List<Place> places;
-    }
-
-    @Getter
-    @NoArgsConstructor
-    public static class Place {
-
-        private String contentId;
-
-        private Integer scheduleOrder;
-
-        private String placeType;
-
-        private String reason;
+        return new AiScheduleResDto(days);
     }
 }

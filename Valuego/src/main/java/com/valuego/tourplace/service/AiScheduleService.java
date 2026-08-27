@@ -110,14 +110,14 @@ public class AiScheduleService {
         restaurants.forEach(place -> placeMap.put(place.getContentId(), place));
 
         // 6. entity 매핑 및 거리 계산
-        for (AiScheduleResDto.Day aiDay : aiResult.getDays()) {
-            TravelDay travelDay = new TravelDay(aiDay.getDayNumber());
+        for (AiScheduleResDto.Day aiDay : aiResult.days()) {
+            TravelDay travelDay = new TravelDay(aiDay.dayNumber());
             double totalDistance = 0.0;
             TourPlace previous = null;
             int order = 1;
 
-            for (AiScheduleResDto.Place aiPlace : aiDay.getPlaces()) {
-                TourPlace place = placeMap.get(aiPlace.getContentId());
+            for (AiScheduleResDto.Place aiPlace : aiDay.places()) {
+                TourPlace place = placeMap.get(aiPlace.contentId());
                 if (place == null) continue;
 
                 Double distanceKm = null;
@@ -140,8 +140,8 @@ public class AiScheduleService {
                         .latitude(place.getLatitude())
                         .longitude(place.getLongitude())
                         .scheduleOrder(order++)
-                        .placeType(aiPlace.getPlaceType())
-                        .reason(aiPlace.getReason())
+                        .placeType(aiPlace.placeType())
+                        .reason(aiPlace.reason())
                         .distanceFromPreviousKm(distanceKm)
                         .build();
 
