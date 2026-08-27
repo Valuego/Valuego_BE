@@ -45,7 +45,11 @@ public enum ErrorCode {
     // GAME
     GAME_QUIZ_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "퀴즈를 찾을 수 없습니다.", "GAME-001"),
     GAME_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "게임을 찾을 수 없습니다.", "GAME-002"),
-    GAME_QUIZ_CREATE_EXCEPTION(HttpStatus.BAD_GATEWAY, "퀴즈 보기 생성에 실패했습니다.", "GAME-003");
+    GAME_QUIZ_CREATE_EXCEPTION(HttpStatus.BAD_GATEWAY, "퀴즈 보기 생성에 실패했습니다.", "GAME-003"),
+
+    // TRAVEL
+    TRAVEL_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "여행을 찾을 수 없습니다.", "TRAVEL-001"),
+    TRAVEL_PLACE_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "여행 장소를 찾을 수 없습니다.", "TRAVEL-002");
 
     private final HttpStatus httpStatus;
     private final String message;
