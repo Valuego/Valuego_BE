@@ -24,6 +24,7 @@ public class TravelScheduleResDto {
     @Getter
     @Builder
     public static class Place {
+        private Long travelPlaceId;
         private String contentId;
         private String name;
         private String address;
@@ -48,6 +49,7 @@ public class TravelScheduleResDto {
                                         .places(
                                                 day.getPlaces().stream()
                                                         .map(place -> Place.builder()
+                                                                .travelPlaceId(place.getId())
                                                                 .contentId(place.getContentId())
                                                                 .name(place.getPlaceName())
                                                                 .address(place.getAddress())
