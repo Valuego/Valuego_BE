@@ -20,10 +20,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
@@ -41,8 +41,8 @@ public class AiScheduleService {
     public TourCandidatesResult fetchTourCandidates(Group group) throws Exception {
         Destination destination = group.getDestination();
 
-        int spotLimit = 10;
-        int restLimit = 15;
+        int spotLimit = 30;
+        int restLimit = 30;
 
         CompletableFuture<List<TourPlace>> spotFuture =
                 CompletableFuture.supplyAsync(() -> tourApiService.getPlaces(destination, 12, spotLimit));
@@ -57,24 +57,27 @@ public class AiScheduleService {
 
         CompletableFuture.allOf(spotFuture, cultureFuture, leportsFuture, shoppingFuture, restaurantFuture).join();
 
-        List<TourPlace> activities = Stream.of(
+        List<TourPlace> activities = new ArrayList<>(Stream.of(
                 spotFuture.get(),
                 cultureFuture.get(),
                 leportsFuture.get(),
                 shoppingFuture.get()
-        ).flatMap(List::stream).toList();
+        ).flatMap(List::stream).toList());
 
-        List<TourPlace> restaurants = restaurantFuture.get();
+        List<TourPlace> restaurants = new ArrayList<>(restaurantFuture.get());
 
         if (activities.isEmpty()) {
             throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR,
                     "관광지 정보를 가져오지 못했습니다.");
         }
 
+        Collections.shuffle(activities);
+        Collections.shuffle(restaurants);
+
         return new TourCandidatesResult(activities, restaurants);
     }
 
-    // 2. gemini 호출 및 일정 저장
+    // 2. Gemini 호출 및 경량화된 DB 저장 (실시간 TourAPI 결합 반환)
     @Transactional
     public TravelScheduleResDto generateAndSaveSchedule(Long groupId, Group group, List<TourPlace> activities, List<TourPlace> restaurants) {
         // 1. 그룹 여행 스타일 조회
@@ -132,13 +135,21 @@ public class AiScheduleService {
                     totalDistance += distance;
                 }
 
+                LocalTime visitTime = null;
+                if (aiPlace.visitTime() != null && !aiPlace.visitTime().isBlank()) {
+                    try {
+                        visitTime = LocalTime.parse(aiPlace.visitTime());
+                    } catch (DateTimeParseException e) {
+                        visitTime = null;
+                    }
+                }
+
                 TravelPlace travelPlace = TravelPlace.builder()
+                        .travelDay(travelDay)
+                        .group(group)
                         .contentId(place.getContentId())
-                        .placeName(place.getName())
-                        .address(place.getAddress())
-                        .imageUrl(place.getImageUrl())
-                        .latitude(place.getLatitude())
-                        .longitude(place.getLongitude())
+                        .contentTypeId(place.getContentTypeId())
+                        .visitTime(visitTime)
                         .scheduleOrder(order++)
                         .placeType(aiPlace.placeType())
                         .reason(aiPlace.reason())
@@ -154,7 +165,8 @@ public class AiScheduleService {
         }
 
         Travel savedTravel = travelRepository.save(travel);
-        return TravelScheduleResDto.from(savedTravel);
+
+        return TravelScheduleResDto.of(savedTravel, placeMap);
     }
 
     private double round(double value) {

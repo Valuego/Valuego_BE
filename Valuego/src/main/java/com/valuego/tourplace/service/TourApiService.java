@@ -60,6 +60,46 @@ public class TourApiService {
                 .toList();
     }
 
+    // contentId 기반 단일 장소 상세 정보 실시간 조회 메서드 (detailCommon2 사용)
+    public TourPlace getPlaceDetail(String contentId) {
+        if (contentId == null || contentId.isBlank()) {
+            return null;
+        }
+
+        TourApiResDto response =
+                restClient.get()
+                        .uri(uriBuilder ->
+                                uriBuilder
+                                        .path("/detailCommon2")
+                                        .queryParam("serviceKey", serviceKey)
+                                        .queryParam("MobileOS", "ETC")
+                                        .queryParam("MobileApp", "ValueGo")
+                                        .queryParam("_type", "json")
+                                        .queryParam("contentId", contentId)
+                                        .build()
+                        )
+                        .retrieve()
+                        .body(TourApiResDto.class);
+
+        if (response == null
+                || response.getResponse() == null
+                || response.getResponse().getBody() == null
+                || response.getResponse().getBody().getItems() == null
+                || response.getResponse().getBody().getItems().getItem() == null
+                || response.getResponse().getBody().getItems().getItem().isEmpty()) {
+
+            return null;
+        }
+
+        TourApiResDto.Item item = response.getResponse()
+                .getBody()
+                .getItems()
+                .getItem()
+                .get(0);
+
+        return convert(item);
+    }
+
     private TourPlace convert(TourApiResDto.Item item) {
         return TourPlace.builder()
                 .contentId(item.getContentId())
