@@ -8,7 +8,9 @@ import com.valuego.groups.entity.GroupMember;
 import com.valuego.groups.entity.repository.GroupMemberRepository;
 import com.valuego.groups.entity.repository.GroupRepository;
 import com.valuego.travel.entity.Travel;
+import com.valuego.travel.entity.TravelDay;
 import com.valuego.travel.entity.TravelPlace;
+import com.valuego.travel.entity.repository.TravelDayRepository;
 import com.valuego.travel.entity.repository.TravelPlaceRepository;
 import com.valuego.travel.entity.repository.TravelRepository;
 import com.valuego.users.entity.User;
@@ -31,6 +33,7 @@ public class EntityFinderException {
     private final GameRepository gameRepository;
     private final TravelRepository travelRepository;
     private final TravelPlaceRepository travelPlaceRepository;
+    private final TravelDayRepository travelDayRepository;
 
     public User getUserFromPrincipal(Principal principal) {
         Long id = Long.parseLong(principal.getName());
@@ -88,5 +91,11 @@ public class EntityFinderException {
         return travelPlaceRepository.findById(travelPlaceId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRAVEL_PLACE_NOT_FOUND_EXCEPTION
                         , ErrorCode.TRAVEL_PLACE_NOT_FOUND_EXCEPTION.getMessage()));
+    }
+
+    public TravelDay getTravelDayById(Long travelDayId) {
+        return travelDayRepository.findById(travelDayId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRAVEL_DAY_NOT_FOUND_EXCEPTION
+                        , ErrorCode.TRAVEL_DAY_NOT_FOUND_EXCEPTION.getMessage()));
     }
 }
