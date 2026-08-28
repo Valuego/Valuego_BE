@@ -32,6 +32,8 @@ public class TravelPlace {
     private String contentId;
 
     private String contentTypeId;
+    private String customName;
+    private String memoUrl;
     private LocalTime visitTime;
 
     @Column(nullable = false)
@@ -47,13 +49,15 @@ public class TravelPlace {
     private Double distanceFromPreviousKm;
 
     @Builder
-    public TravelPlace(TravelDay travelDay, Group group, String contentId, String contentTypeId, LocalTime visitTime,
+    public TravelPlace(TravelDay travelDay, Group group, String contentId, String contentTypeId, String customName, String memoUrl ,LocalTime visitTime,
                        Integer scheduleOrder, String placeType, String reason,
                        Double distanceFromPreviousKm) {
         this.travelDay = travelDay;
         this.group = group;
         this.contentId = contentId;
         this.contentTypeId = contentTypeId;
+        this.customName = customName;
+        this.memoUrl = memoUrl;
         this.visitTime = visitTime;
         this.scheduleOrder = scheduleOrder;
         this.placeType = placeType;
@@ -69,9 +73,5 @@ public class TravelPlace {
         if (travelDay != null && !travelDay.getPlaces().contains(this)) {
             travelDay.getPlaces().add(this);
         }
-    }
-
-    public void updateDistanceFromPrevious(Double distance) {
-        this.distanceFromPreviousKm = distance;
     }
 }

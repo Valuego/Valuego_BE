@@ -9,6 +9,7 @@ import com.valuego.groups.entity.Group;
 import com.valuego.groups.service.GroupService;
 import com.valuego.tourplace.api.dto.response.TravelScheduleResDto;
 import com.valuego.tourplace.service.AiScheduleService;
+import com.valuego.travel.api.dto.request.TravelPlaceCreateReqDto;
 import com.valuego.travel.api.dto.response.TravelPlaceInfoResDto;
 import com.valuego.travel.service.TravelService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -74,5 +75,14 @@ public class TravelController {
         GroupStatusResDto groupStatusResDto = travelService.confirmSchedule(principal, groupId, guestToken);
 
         return ApiResTemplate.successResponse(SuccessCode.GET_SUCCESS, groupStatusResDto);
+    }
+
+    @Operation(summary = "장소 직접 추가", description = "로그인한 사용자가 새로운 커스텀 장소(이름, 시간, 참고링크, 순서)를 추가합니다.")
+    @PostMapping("/places")
+    public ApiResTemplate<TravelPlaceInfoResDto> createCustomPlace(Principal principal,
+                                                  @RequestBody TravelPlaceCreateReqDto travelPlaceCreateReqDto,
+                                                  @CookieValue(value = "guestAccessToken", required = false) String guestToken) {
+        TravelPlaceInfoResDto travelPlaceInfoResDto = travelService.createCustomPlace(principal, travelPlaceCreateReqDto, guestToken);
+        return ApiResTemplate.successResponse(SuccessCode.SUCCESS, travelPlaceInfoResDto);
     }
 }

@@ -86,12 +86,13 @@ public class TravelScheduleResDto {
                                         .places(
                                                 day.getPlaces().stream()
                                                         .map(place -> {
-                                                            TourPlace liveData = livePlaceMap.get(place.getContentId());
-                                                            return Place.builder()
+                                                            TourPlace liveData = (place.getContentId() != null)
+                                                                    ? livePlaceMap.get(place.getContentId())
+                                                                    : null;                                                            return Place.builder()
                                                                     .travelPlaceId(place.getId())
                                                                     .contentId(place.getContentId())
                                                                     .visitTime(place.getVisitTime())
-                                                                    .name(liveData != null ? liveData.getName() : null)
+                                                                    .name(place.getCustomName() != null ? place.getCustomName() : (liveData != null ? liveData.getName() : "장소 정보 없음"))
                                                                     .address(liveData != null ? liveData.getAddress() : null)
                                                                     .imageUrl(liveData != null ? liveData.getImageUrl() : null)
                                                                     .latitude(liveData != null ? liveData.getLatitude() : null)

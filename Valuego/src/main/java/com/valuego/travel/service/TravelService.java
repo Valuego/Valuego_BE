@@ -10,9 +10,12 @@ import com.valuego.tourplace.api.dto.response.TourPlace;
 import com.valuego.tourplace.api.dto.response.TravelScheduleResDto;
 import com.valuego.tourplace.service.TourApiService;
 import com.valuego.tourplace.service.TravelScheduleMapper;
+import com.valuego.travel.api.dto.request.TravelPlaceCreateReqDto;
 import com.valuego.travel.api.dto.response.TravelPlaceInfoResDto;
 import com.valuego.travel.entity.Travel;
+import com.valuego.travel.entity.TravelDay;
 import com.valuego.travel.entity.TravelPlace;
+import com.valuego.travel.entity.repository.TravelPlaceRepository;
 import com.valuego.travel.entity.repository.TravelRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,6 +33,7 @@ public class TravelService {
     private final ValidMemberException validMemberException;
     private final TravelScheduleMapper travelScheduleMapper;
     private final TourApiService tourApiService;
+    private final TravelPlaceRepository travelPlaceRepository;
 
     // 전체 일정 조회
     public TravelScheduleResDto getAllSchedule(Principal principal, Long groupId, String guestToken) {
@@ -68,5 +72,35 @@ public class TravelService {
         group.confirmSchedule();
 
         return GroupStatusResDto.from(group);
+    }
+
+    // 장소 직접 추가
+    @Transactional
+    public TravelPlaceInfoResDto createCustomPlace(Principal principal, TravelPlaceCreateReqDto reqDto, String guestToken) {
+        TravelDay travelDay = entityFinderException.getTravelDayById(reqDto.travelDayId());
+
+        Group group = travelDay.getTravel().getGroup();
+        validMemberException.validateGroupMember(principal, guestToken, group);
+
+        int targetOrder = (reqDto.scheduleOrder() != null)
+                ? reqDto.scheduleOrder()
+                : travelDay.getPlaces().size() + 1;
+
+        TravelPlace travelPlace = TravelPlace.builder()
+                .travelDay(travelDay)
+                .group(group)
+                .contentId(null)
+                .contentTypeId("CUSTOM")
+                .customName(reqDto.customName())
+                .visitTime(reqDto.visitTime())
+                .memoUrl(reqDto.memoUrl())
+                .scheduleOrder(targetOrder)
+                .placeType("CUSTOM")
+                .reason("직접 추가한 장소입니다.")
+                .distanceFromPreviousKm(null)
+                .build();
+
+        travelPlaceRepository.save(travelPlace);
+        return TravelPlaceInfoResDto.of(travelPlace);
     }
 }

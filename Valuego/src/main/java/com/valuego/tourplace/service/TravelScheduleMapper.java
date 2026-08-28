@@ -25,6 +25,7 @@ public class TravelScheduleMapper {
         // 1. DB의 Travel에서 모든 TravelPlace 추출
         List<TravelPlace> allPlaces = travel.getDays().stream()
                 .flatMap(day -> day.getPlaces().stream())
+                .filter(place -> place.getContentId() != null && !place.getContentId().isBlank())
                 .toList();
 
         // 2. contentId 기반 관광공사 API 실시간 병렬 호출 (CompletableFuture)
