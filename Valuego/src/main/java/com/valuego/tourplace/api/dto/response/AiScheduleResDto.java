@@ -12,6 +12,7 @@ public record AiScheduleResDto(List<Day> days) {
 
     public record Place(
             String contentId,
+            String visitTime,
             Integer scheduleOrder,
             String placeType,
             String reason
@@ -24,6 +25,7 @@ public record AiScheduleResDto(List<Day> days) {
                         day.getPlaces().stream()
                                 .map(place -> new Place(
                                         place.getContentId(),
+                                        place.getVisitTime() != null ? place.getVisitTime().toString() : null,
                                         place.getScheduleOrder(),
                                         place.getPlaceType(),
                                         place.getReason()

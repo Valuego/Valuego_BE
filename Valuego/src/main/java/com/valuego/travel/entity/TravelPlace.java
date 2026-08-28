@@ -1,10 +1,13 @@
 package com.valuego.travel.entity;
 
+import com.valuego.groups.entity.Group;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalTime;
 
 @Entity
 @Getter
@@ -20,22 +23,16 @@ public class TravelPlace {
     @JoinColumn(name = "travel_day_id", nullable = false)
     private TravelDay travelDay;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_id", nullable = false)
+    private Group group;
+
     // 한국관광공사 contentId
     @Column(nullable = false)
     private String contentId;
 
-    @Column(nullable = false)
-    private String placeName;
-
-    private String address;
-
-    private String imageUrl;
-
-    @Column(nullable = false)
-    private Double latitude;
-
-    @Column(nullable = false)
-    private Double longitude;
+    private String contentTypeId;
+    private LocalTime visitTime;
 
     @Column(nullable = false)
     private Integer scheduleOrder;
@@ -50,17 +47,14 @@ public class TravelPlace {
     private Double distanceFromPreviousKm;
 
     @Builder
-    public TravelPlace(TravelDay travelDay, String contentId, String placeName, String address,
-                       String imageUrl, Double latitude, Double longitude,
+    public TravelPlace(TravelDay travelDay, Group group, String contentId, String contentTypeId, LocalTime visitTime,
                        Integer scheduleOrder, String placeType, String reason,
                        Double distanceFromPreviousKm) {
         this.travelDay = travelDay;
+        this.group = group;
         this.contentId = contentId;
-        this.placeName = placeName;
-        this.address = address;
-        this.imageUrl = imageUrl;
-        this.latitude = latitude;
-        this.longitude = longitude;
+        this.contentTypeId = contentTypeId;
+        this.visitTime = visitTime;
         this.scheduleOrder = scheduleOrder;
         this.placeType = placeType;
         this.reason = reason;
