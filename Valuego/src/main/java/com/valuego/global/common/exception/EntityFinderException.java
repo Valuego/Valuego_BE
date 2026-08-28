@@ -7,6 +7,10 @@ import com.valuego.groups.entity.Group;
 import com.valuego.groups.entity.GroupMember;
 import com.valuego.groups.entity.repository.GroupMemberRepository;
 import com.valuego.groups.entity.repository.GroupRepository;
+import com.valuego.travel.entity.Travel;
+import com.valuego.travel.entity.TravelPlace;
+import com.valuego.travel.entity.repository.TravelPlaceRepository;
+import com.valuego.travel.entity.repository.TravelRepository;
 import com.valuego.users.entity.User;
 import com.valuego.users.entity.UserNotificationAgree;
 import com.valuego.users.entity.repository.UserNotificationAgreeRepository;
@@ -25,6 +29,8 @@ public class EntityFinderException {
     private final GroupRepository groupRepository;
     private final GroupMemberRepository groupMemberRepository;
     private final GameRepository gameRepository;
+    private final TravelRepository travelRepository;
+    private final TravelPlaceRepository travelPlaceRepository;
 
     public User getUserFromPrincipal(Principal principal) {
         Long id = Long.parseLong(principal.getName());
@@ -70,5 +76,17 @@ public class EntityFinderException {
         return gameRepository.findById(gameId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.GAME_NOT_FOUND_EXCEPTION
                         , ErrorCode.GAME_NOT_FOUND_EXCEPTION.getMessage()));
+    }
+
+    public Travel getTravelById(Long travelId) {
+        return travelRepository.findById(travelId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRAVEL_NOT_FOUND_EXCEPTION
+                        , ErrorCode.TRAVEL_NOT_FOUND_EXCEPTION.getMessage()));
+    }
+
+    public TravelPlace getTravelPlaceById(Long travelPlaceId) {
+        return travelPlaceRepository.findById(travelPlaceId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRAVEL_PLACE_NOT_FOUND_EXCEPTION
+                        , ErrorCode.TRAVEL_PLACE_NOT_FOUND_EXCEPTION.getMessage()));
     }
 }

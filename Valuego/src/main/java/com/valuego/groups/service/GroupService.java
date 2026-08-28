@@ -123,4 +123,19 @@ public class GroupService {
 
         return new GroupListResDto(ongoingGroups, pastGroups);
     }
+
+    // ai 일정 생성 위한 그룹 조회
+    public Group getGroup(Principal principal, Long groupId) {
+        User user = entityFinderException.getUserFromPrincipal(principal);
+        Group group = entityFinderException.getGroupById(groupId);
+
+        if (!group.getLeader().getId().equals(user.getId())) {
+            throw new BusinessException(
+                    ErrorCode.FORBIDDEN_EXCEPTION,
+                    "팀장만 여행 일정을 생성할 수 있습니다."
+            );
+        }
+
+        return group;
+    }
 }
