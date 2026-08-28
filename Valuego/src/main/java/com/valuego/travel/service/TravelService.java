@@ -4,6 +4,7 @@ import com.valuego.global.common.code.ErrorCode;
 import com.valuego.global.common.exception.BusinessException;
 import com.valuego.global.common.exception.EntityFinderException;
 import com.valuego.global.common.exception.ValidMemberException;
+import com.valuego.groups.api.dto.response.GroupStatusResDto;
 import com.valuego.groups.entity.Group;
 import com.valuego.tourplace.api.dto.response.TourPlace;
 import com.valuego.tourplace.api.dto.response.TravelScheduleResDto;
@@ -52,5 +53,20 @@ public class TravelService {
         TourPlace liveData = tourApiService.getPlaceDetail(travelPlace.getContentId());
 
         return TravelPlaceInfoResDto.of(travelPlace, liveData);
+    }
+
+    // 일정 확정
+    @Transactional
+    public GroupStatusResDto confirmSchedule(Principal principal, Long groupId, String guestToken) {
+        Group group = entityFinderException.getGroupById(groupId);
+        validMemberException.validateGroupMember(principal, guestToken, group);
+
+        travelRepository.findByGroupId(groupId)
+                .orElseThrow(()-> new BusinessException(ErrorCode.TRAVEL_NOT_FOUND_EXCEPTION
+                        , ErrorCode.TRAVEL_NOT_FOUND_EXCEPTION.getMessage()));
+
+        group.confirmSchedule();
+
+        return GroupStatusResDto.from(group);
     }
 }

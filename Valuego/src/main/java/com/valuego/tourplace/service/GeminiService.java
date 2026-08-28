@@ -39,11 +39,11 @@ public class GeminiService {
     public AiScheduleResDto generate(Destination destination, int days, List<GroupStyleDto> styles, List<TourPlace> activities, List<TourPlace> restaurants) {
         // 1. 프롬프트 토큰 다이어트: 필요한 필드(id, name, type)만 추출
         List<GeminiCandidatePlaceDto> candidateActivities = activities.stream()
-                .map(GeminiCandidatePlaceDto::new)
+                .map(place -> new GeminiCandidatePlaceDto(place, place.getLatitude(), place.getLongitude()))
                 .toList();
 
         List<GeminiCandidatePlaceDto> candidateRestaurants = restaurants.stream()
-                .map(GeminiCandidatePlaceDto::new)
+                .map(place -> new GeminiCandidatePlaceDto(place, place.getLatitude(), place.getLongitude()))
                 .toList();
 
         String activitiesJson;

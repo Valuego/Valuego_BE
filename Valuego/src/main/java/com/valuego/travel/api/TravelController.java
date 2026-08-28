@@ -2,6 +2,9 @@ package com.valuego.travel.api;
 
 import com.valuego.global.common.code.SuccessCode;
 import com.valuego.global.common.template.ApiResTemplate;
+import com.valuego.groups.api.dto.response.GroupInfoResDto;
+import com.valuego.groups.api.dto.response.GroupMemberInfoResDto;
+import com.valuego.groups.api.dto.response.GroupStatusResDto;
 import com.valuego.groups.entity.Group;
 import com.valuego.groups.service.GroupService;
 import com.valuego.tourplace.api.dto.response.TravelScheduleResDto;
@@ -61,5 +64,15 @@ public class TravelController {
         TravelPlaceInfoResDto travelPlaceInfoResDto = travelService.getDetailSchedule(principal, travelPlaceId, guestToken);
 
         return ApiResTemplate.successResponse(SuccessCode.GET_SUCCESS, travelPlaceInfoResDto);
+    }
+
+    @Operation(summary = "일정 확정", description = "일정을 확정합니다. 그룹 상태가 CONFIRMED로 변경됩니다.")
+    @PatchMapping("/confirm")
+    public ApiResTemplate<GroupStatusResDto> confirmSchedule(Principal principal,
+                                                             @RequestParam Long groupId,
+                                                             @CookieValue(value = "guestAccessToken", required = false) String guestToken) {
+        GroupStatusResDto groupStatusResDto = travelService.confirmSchedule(principal, groupId, guestToken);
+
+        return ApiResTemplate.successResponse(SuccessCode.GET_SUCCESS, groupStatusResDto);
     }
 }
