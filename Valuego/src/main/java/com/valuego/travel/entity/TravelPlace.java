@@ -85,4 +85,8 @@ public class TravelPlace {
         this.visitTime = visitTime;
         this.memoUrl = memoUrl;
     }
+
+    public void updateScheduleOrder(Integer scheduleOrder) {
+        this.scheduleOrder = scheduleOrder;
+    }
 }

@@ -12,6 +12,7 @@ import com.valuego.tourplace.service.AiScheduleService;
 import com.valuego.travel.api.dto.request.TravelPlaceCreateReqDto;
 import com.valuego.travel.api.dto.request.TravelPlaceUpdateReqDto;
 import com.valuego.travel.api.dto.response.TravelPlaceInfoResDto;
+import com.valuego.travel.entity.Travel;
 import com.valuego.travel.service.TravelService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
@@ -97,5 +98,15 @@ public class TravelController {
         TravelPlaceInfoResDto travelPlaceInfoResDto = travelService.updatePlace(principal, travelPlaceId, reqDto, guestToken);
 
         return ApiResTemplate.successResponse(SuccessCode.SUCCESS, travelPlaceInfoResDto);
+    }
+
+    @Operation(summary = "장소 정보 삭제", description = "로그인한 사용자가 선택한 장소를 일정에서 삭제합니다.")
+    @DeleteMapping("/places")
+    public ApiResTemplate<String> deletePlace(Principal principal,
+                                            @RequestParam Long travelPlaceId,
+                                            @CookieValue(value = "guestAccessToken", required = false) String guestToken) {
+        travelService.deletePlace(principal, travelPlaceId, guestToken);
+
+        return ApiResTemplate.successWithNoContent(SuccessCode.DELETE_SUCCESS);
     }
 }

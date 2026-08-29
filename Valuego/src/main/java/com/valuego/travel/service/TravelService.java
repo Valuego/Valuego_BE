@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.Principal;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -118,8 +119,23 @@ public class TravelService {
         return TravelPlaceInfoResDto.of(travelPlace);
     }
 
-    // todo: 일정 삭제
+    @Transactional
+    public void deletePlace(Principal principal, Long travelPlaceId, String guestToken) {
+        TravelPlace travelPlace = entityFinderException.getTravelPlaceById(travelPlaceId);
+        TravelDay travelDay = travelPlace.getTravelDay();
+        Group group = travelPlace.getGroup();
 
+        validMemberException.validateGroupMember(principal, guestToken, group);
+
+        travelDay.getPlaces().remove(travelPlace);
+        travelPlaceRepository.delete(travelPlace);
+
+        // 남은 장소들 scheduleOrder 1부터 재정렬
+        List<TravelPlace> remainingPlaces = travelDay.getPlaces();
+        for (int i = 0; i < remainingPlaces.size(); i++) {
+            remainingPlaces.get(i).updateScheduleOrder(i + 1);
+        }
+    }
 
     // todo: 일정 ai 요청 수정
 }
