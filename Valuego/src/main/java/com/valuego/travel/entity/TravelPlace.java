@@ -74,4 +74,15 @@ public class TravelPlace {
             travelDay.getPlaces().add(this);
         }
     }
+
+    public void updatePlace(String customName,  Integer scheduleOrder, LocalTime visitTime, String memoUrl) {
+        if (customName != null && !customName.isBlank()) {
+            this.customName = customName;
+        }
+        if (scheduleOrder != null) {
+            this.scheduleOrder = scheduleOrder;
+        }
+        this.visitTime = visitTime;
+        this.memoUrl = memoUrl;
+    }
 }

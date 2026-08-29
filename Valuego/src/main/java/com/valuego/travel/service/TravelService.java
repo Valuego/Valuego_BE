@@ -11,6 +11,7 @@ import com.valuego.tourplace.api.dto.response.TravelScheduleResDto;
 import com.valuego.tourplace.service.TourApiService;
 import com.valuego.tourplace.service.TravelScheduleMapper;
 import com.valuego.travel.api.dto.request.TravelPlaceCreateReqDto;
+import com.valuego.travel.api.dto.request.TravelPlaceUpdateReqDto;
 import com.valuego.travel.api.dto.response.TravelPlaceInfoResDto;
 import com.valuego.travel.entity.Travel;
 import com.valuego.travel.entity.TravelDay;
@@ -103,4 +104,22 @@ public class TravelService {
         travelPlaceRepository.save(travelPlace);
         return TravelPlaceInfoResDto.of(travelPlace);
     }
+
+    // 일정 직접 수정
+    @Transactional
+    public TravelPlaceInfoResDto updatePlace(Principal principal, Long travelPlaceId, TravelPlaceUpdateReqDto reqDto, String guestToken) {
+        TravelPlace travelPlace = entityFinderException.getTravelPlaceById(travelPlaceId);
+        Group group = travelPlace.getGroup();
+
+        validMemberException.validateGroupMember(principal, guestToken, group);
+
+        travelPlace.updatePlace(reqDto.customName(), reqDto.scheduleOrder(), reqDto.visitTime(), reqDto.memoUrl());
+
+        return TravelPlaceInfoResDto.of(travelPlace);
+    }
+
+    // todo: 일정 삭제
+
+
+    // todo: 일정 ai 요청 수정
 }

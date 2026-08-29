@@ -41,6 +41,7 @@ public class TravelScheduleResDto {
         private String placeType;
         private String reason;
         private Double distanceFromPreviousKm;
+        private String memoUrl;
     }
 
     public static TravelScheduleResDto from(Travel travel) {
@@ -88,7 +89,8 @@ public class TravelScheduleResDto {
                                                         .map(place -> {
                                                             TourPlace liveData = (place.getContentId() != null)
                                                                     ? livePlaceMap.get(place.getContentId())
-                                                                    : null;                                                            return Place.builder()
+                                                                    : null;
+                                                            return Place.builder()
                                                                     .travelPlaceId(place.getId())
                                                                     .contentId(place.getContentId())
                                                                     .visitTime(place.getVisitTime())
@@ -103,6 +105,7 @@ public class TravelScheduleResDto {
                                                                     .distanceFromPreviousKm(
                                                                             place.getDistanceFromPreviousKm()
                                                                     )
+                                                                    .memoUrl(place.getMemoUrl())
                                                                     .build();
                                                         })
                                                         .toList()

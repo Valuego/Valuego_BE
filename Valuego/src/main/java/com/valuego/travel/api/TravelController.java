@@ -10,6 +10,7 @@ import com.valuego.groups.service.GroupService;
 import com.valuego.tourplace.api.dto.response.TravelScheduleResDto;
 import com.valuego.tourplace.service.AiScheduleService;
 import com.valuego.travel.api.dto.request.TravelPlaceCreateReqDto;
+import com.valuego.travel.api.dto.request.TravelPlaceUpdateReqDto;
 import com.valuego.travel.api.dto.response.TravelPlaceInfoResDto;
 import com.valuego.travel.service.TravelService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -83,6 +84,18 @@ public class TravelController {
                                                   @RequestBody TravelPlaceCreateReqDto travelPlaceCreateReqDto,
                                                   @CookieValue(value = "guestAccessToken", required = false) String guestToken) {
         TravelPlaceInfoResDto travelPlaceInfoResDto = travelService.createCustomPlace(principal, travelPlaceCreateReqDto, guestToken);
+
+        return ApiResTemplate.successResponse(SuccessCode.SUCCESS, travelPlaceInfoResDto);
+    }
+
+    @Operation(summary = "장소 정보 수정", description = "로그인한 사용자가 장소명, 시간, 참고링크를 수정합니다. 커스텀 장소, ai 일정 모두 수정 가능")
+    @PatchMapping("/places")
+    public ApiResTemplate<TravelPlaceInfoResDto> updatePlace(Principal principal,
+                                            @RequestParam Long travelPlaceId,
+                                            @RequestBody TravelPlaceUpdateReqDto reqDto,
+                                            @CookieValue(value = "guestAccessToken", required = false) String guestToken) {
+        TravelPlaceInfoResDto travelPlaceInfoResDto = travelService.updatePlace(principal, travelPlaceId, reqDto, guestToken);
+
         return ApiResTemplate.successResponse(SuccessCode.SUCCESS, travelPlaceInfoResDto);
     }
 }
