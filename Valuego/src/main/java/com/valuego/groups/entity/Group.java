@@ -2,6 +2,7 @@ package com.valuego.groups.entity;
 
 import com.valuego.global.common.template.BaseTimeEntity;
 import com.valuego.groups.entity.Enum.Destination;
+import com.valuego.groups.entity.Enum.GroupStatus;
 import com.valuego.groups.entity.Enum.TransportType;
 import com.valuego.users.entity.User;
 import jakarta.persistence.*;
@@ -46,8 +47,11 @@ public class Group extends BaseTimeEntity {
     @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<GroupMember> groupMembers = new ArrayList<>();
 
+    @Enumerated(EnumType.STRING)
+    private GroupStatus groupStatus;
+
     @Builder
-    public Group(String title, Destination destination, LocalDateTime startDate, LocalDateTime endDate, Integer memberCount, String groupLink, TransportType transportType, User leader) {
+    public Group(String title, Destination destination, LocalDateTime startDate, LocalDateTime endDate, Integer memberCount, String groupLink, TransportType transportType, User leader, GroupStatus groupStatus) {
         this.title = title;
         this.destination = destination;
         this.startDate = startDate;
@@ -56,5 +60,10 @@ public class Group extends BaseTimeEntity {
         this.groupLink = groupLink;
         this.transportType = transportType;
         this.leader = leader;
+        this.groupStatus = groupStatus;
+    }
+
+    public void confirmSchedule() {
+        this.groupStatus = GroupStatus.CONFIRMED;
     }
 }

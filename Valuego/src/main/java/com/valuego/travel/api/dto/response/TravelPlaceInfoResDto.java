@@ -17,11 +17,16 @@ public record TravelPlaceInfoResDto(
         String name,
         String address,
         String imageUrl,
+        String memoUrl,
         Double latitude,
         Double longitude,
         Double distanceFromPreviousKm
 ) {
     public static TravelPlaceInfoResDto of(TravelPlace place, TourPlace liveData) {
+        String displayName = (place.getCustomName() != null && !place.getCustomName().isBlank())
+                ? place.getCustomName()
+                : (liveData != null ? liveData.getName() : "장소 정보 없음");
+
         return new TravelPlaceInfoResDto(
                 place.getId(),
                 place.getContentId(),
@@ -29,11 +34,30 @@ public record TravelPlaceInfoResDto(
                 place.getScheduleOrder(),
                 place.getPlaceType(),
                 place.getReason(),
-                liveData != null ? liveData.getName() : "장소 정보 없음",
+                displayName,
                 liveData != null ? liveData.getAddress() : "",
                 liveData != null ? liveData.getImageUrl() : "",
+                place.getMemoUrl(),
                 liveData != null ? liveData.getLatitude() : null,
                 liveData != null ? liveData.getLongitude() : null,
+                place.getDistanceFromPreviousKm()
+        );
+    }
+
+    public static TravelPlaceInfoResDto of(TravelPlace place) {
+        return new TravelPlaceInfoResDto(
+                place.getId(),
+                place.getContentId(),
+                place.getVisitTime(),
+                place.getScheduleOrder(),
+                place.getPlaceType(),
+                place.getReason(),
+                place.getCustomName(),
+                "",
+                "",
+                place.getMemoUrl(),
+                null,
+                null,
                 place.getDistanceFromPreviousKm()
         );
     }

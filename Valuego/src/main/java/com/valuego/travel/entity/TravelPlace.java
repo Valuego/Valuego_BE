@@ -1,5 +1,8 @@
 package com.valuego.travel.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer;
 import com.valuego.groups.entity.Group;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -32,6 +35,11 @@ public class TravelPlace {
     private String contentId;
 
     private String contentTypeId;
+    private String customName;
+    private String memoUrl;
+
+    @JsonSerialize(using = LocalTimeSerializer.class)
+    @JsonFormat(pattern = "HH:mm")
     private LocalTime visitTime;
 
     @Column(nullable = false)
@@ -47,13 +55,15 @@ public class TravelPlace {
     private Double distanceFromPreviousKm;
 
     @Builder
-    public TravelPlace(TravelDay travelDay, Group group, String contentId, String contentTypeId, LocalTime visitTime,
+    public TravelPlace(TravelDay travelDay, Group group, String contentId, String contentTypeId, String customName, String memoUrl ,LocalTime visitTime,
                        Integer scheduleOrder, String placeType, String reason,
                        Double distanceFromPreviousKm) {
         this.travelDay = travelDay;
         this.group = group;
         this.contentId = contentId;
         this.contentTypeId = contentTypeId;
+        this.customName = customName;
+        this.memoUrl = memoUrl;
         this.visitTime = visitTime;
         this.scheduleOrder = scheduleOrder;
         this.placeType = placeType;
@@ -71,7 +81,22 @@ public class TravelPlace {
         }
     }
 
-    public void updateDistanceFromPrevious(Double distance) {
-        this.distanceFromPreviousKm = distance;
+    public void updatePlace(String customName,  Integer scheduleOrder, LocalTime visitTime, String memoUrl) {
+        if (customName != null && !customName.isBlank()) {
+            this.customName = customName;
+        }
+        if (scheduleOrder != null) {
+            this.scheduleOrder = scheduleOrder;
+        }
+        if (visitTime != null) {
+            this.visitTime = visitTime;
+        }
+        if (memoUrl != null) {
+            this.memoUrl = memoUrl;
+        }
+    }
+
+    public void updateScheduleOrder(Integer scheduleOrder) {
+        this.scheduleOrder = scheduleOrder;
     }
 }

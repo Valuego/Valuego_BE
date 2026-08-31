@@ -1,11 +1,16 @@
 package com.valuego.tourplace.api.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer;
 import com.valuego.travel.entity.Travel;
+import com.valuego.travel.entity.TravelDay;
+import com.valuego.travel.entity.TravelPlace;
 import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalTime;
+import java.util.Comparator;
 import java.util.List;
 
 @Getter
@@ -30,6 +35,7 @@ public class TravelScheduleResDto {
         private String contentId;
 
         @JsonFormat(pattern = "HH:mm")
+        @JsonSerialize(using = LocalTimeSerializer.class)
         private LocalTime visitTime;
 
         private String name;
@@ -41,18 +47,25 @@ public class TravelScheduleResDto {
         private String placeType;
         private String reason;
         private Double distanceFromPreviousKm;
+        private String memoUrl;
     }
+
+    private static final Comparator<TravelPlace> PLACE_COMPARATOR = Comparator
+            .comparing(TravelPlace::getScheduleOrder, Comparator.nullsFirst(Comparator.naturalOrder()))
+            .thenComparing(TravelPlace::getVisitTime, Comparator.nullsFirst(Comparator.naturalOrder()));
 
     public static TravelScheduleResDto from(Travel travel) {
         return TravelScheduleResDto.builder()
                 .travelId(travel.getId())
                 .days(
                         travel.getDays().stream()
+                                .sorted(Comparator.comparing(TravelDay::getDayNumber))
                                 .map(day -> Day.builder()
                                         .dayNumber(day.getDayNumber())
                                         .totalDistanceKm(day.getTotalDistanceKm())
                                         .places(
                                                 day.getPlaces().stream()
+                                                        .sorted(PLACE_COMPARATOR)
                                                         .map(place -> Place.builder()
                                                                 .travelPlaceId(place.getId())
                                                                 .contentId(place.getContentId())
@@ -80,18 +93,22 @@ public class TravelScheduleResDto {
                 .travelId(travel.getId())
                 .days(
                         travel.getDays().stream()
+                                .sorted(Comparator.comparing(TravelDay::getDayNumber))
                                 .map(day -> Day.builder()
                                         .dayNumber(day.getDayNumber())
                                         .totalDistanceKm(day.getTotalDistanceKm())
                                         .places(
                                                 day.getPlaces().stream()
+                                                        .sorted(PLACE_COMPARATOR)
                                                         .map(place -> {
-                                                            TourPlace liveData = livePlaceMap.get(place.getContentId());
+                                                            TourPlace liveData = (place.getContentId() != null)
+                                                                    ? livePlaceMap.get(place.getContentId())
+                                                                    : null;
                                                             return Place.builder()
                                                                     .travelPlaceId(place.getId())
                                                                     .contentId(place.getContentId())
                                                                     .visitTime(place.getVisitTime())
-                                                                    .name(liveData != null ? liveData.getName() : null)
+                                                                    .name(place.getCustomName() != null ? place.getCustomName() : (liveData != null ? liveData.getName() : "장소 정보 없음"))
                                                                     .address(liveData != null ? liveData.getAddress() : null)
                                                                     .imageUrl(liveData != null ? liveData.getImageUrl() : null)
                                                                     .latitude(liveData != null ? liveData.getLatitude() : null)
@@ -102,6 +119,7 @@ public class TravelScheduleResDto {
                                                                     .distanceFromPreviousKm(
                                                                             place.getDistanceFromPreviousKm()
                                                                     )
+                                                                    .memoUrl(place.getMemoUrl())
                                                                     .build();
                                                         })
                                                         .toList()

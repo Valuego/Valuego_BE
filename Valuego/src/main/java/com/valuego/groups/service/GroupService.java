@@ -6,6 +6,7 @@ import com.valuego.global.common.exception.EntityFinderException;
 import com.valuego.groups.api.dto.reqest.GroupCreateReqDto;
 import com.valuego.groups.api.dto.response.GroupInfoResDto;
 import com.valuego.groups.api.dto.response.GroupListResDto;
+import com.valuego.groups.entity.Enum.GroupStatus;
 import com.valuego.groups.entity.Group;
 import com.valuego.groups.entity.GroupMember;
 import com.valuego.groups.entity.Enum.MemberRole;
@@ -49,6 +50,7 @@ public class GroupService {
                 .groupLink(groupLink)
                 .transportType(groupCreateReqDto.transportType())
                 .leader(user)
+                .groupStatus(GroupStatus.PLANNING) // 초기 상태(계획 중)
                 .build();
 
         groupRepository.save(group);
