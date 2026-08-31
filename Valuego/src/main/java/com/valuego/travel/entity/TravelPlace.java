@@ -88,8 +88,12 @@ public class TravelPlace {
         if (scheduleOrder != null) {
             this.scheduleOrder = scheduleOrder;
         }
-        this.visitTime = visitTime;
-        this.memoUrl = memoUrl;
+        if (visitTime != null) {
+            this.visitTime = visitTime;
+        }
+        if (memoUrl != null) {
+            this.memoUrl = memoUrl;
+        }
     }
 
     public void updateScheduleOrder(Integer scheduleOrder) {
