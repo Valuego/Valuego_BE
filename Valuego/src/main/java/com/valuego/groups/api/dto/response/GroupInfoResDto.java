@@ -1,6 +1,7 @@
 package com.valuego.groups.api.dto.response;
 
 import com.valuego.groups.entity.Enum.Destination;
+import com.valuego.groups.entity.Enum.GroupStatus;
 import com.valuego.groups.entity.Group;
 import com.valuego.groups.entity.Enum.TransportType;
 import com.valuego.groups.entity.GroupMember;
@@ -20,7 +21,8 @@ public record GroupInfoResDto(
         TransportType transportType,
         String groupLink,
         String dDay,
-        List<GroupMemberInfoResDto> members
+        List<GroupMemberInfoResDto> members,
+        GroupStatus groupStatus
 
 ) {
     public static GroupInfoResDto from(Group group, List<GroupMember> groupMembers) {
@@ -37,7 +39,8 @@ public record GroupInfoResDto(
                 calculateDDay(group.getEndDate()),
                 groupMembers.stream()
                         .map(GroupMemberInfoResDto::from)
-                        .toList()
+                        .toList(),
+                group.getGroupStatus()
         );
     }
     private static String calculateDDay(LocalDateTime endDate) {

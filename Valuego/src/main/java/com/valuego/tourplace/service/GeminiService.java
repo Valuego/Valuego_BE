@@ -9,6 +9,7 @@ import com.valuego.tourplace.api.dto.GeminiCandidatePlaceDto;
 import com.valuego.tourplace.api.dto.GroupStyleDto;
 import com.valuego.tourplace.api.dto.response.AiScheduleResDto;
 import com.valuego.tourplace.api.dto.response.TourPlace;
+import com.valuego.travel.api.dto.response.AiScheduleUpdateResDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,14 +37,15 @@ public class GeminiService {
     @Value("${gemini.model}")
     private String model;
 
+    // ai 여행 일정 생성
     public AiScheduleResDto generate(Destination destination, int days, List<GroupStyleDto> styles, List<TourPlace> activities, List<TourPlace> restaurants) {
         // 1. 프롬프트 토큰 다이어트: 필요한 필드(id, name, type)만 추출
         List<GeminiCandidatePlaceDto> candidateActivities = activities.stream()
-                .map(GeminiCandidatePlaceDto::new)
+                .map(place -> new GeminiCandidatePlaceDto(place, place.getLatitude(), place.getLongitude()))
                 .toList();
 
         List<GeminiCandidatePlaceDto> candidateRestaurants = restaurants.stream()
-                .map(GeminiCandidatePlaceDto::new)
+                .map(place -> new GeminiCandidatePlaceDto(place, place.getLatitude(), place.getLongitude()))
                 .toList();
 
         String activitiesJson;
@@ -103,7 +105,99 @@ public class GeminiService {
                 }
                 """, destination.name(), stylesJson, activitiesJson, restaurantsJson);
 
-        // 3. Gemini Request Map 구성
+        return callGeminiApi(prompt);
+    }
+
+    // ai 일정 수정 요청
+    public AiScheduleUpdateResDto generateUpdate(Destination destination,
+                                                 int dayNumber,
+                                                 List<GroupStyleDto> styles,
+                                                 List<TourPlace> activities,
+                                                 List<TourPlace> restaurants,
+                                                 String currentScheduleJson,
+                                                 String userPrompt) {
+
+        List<GeminiCandidatePlaceDto> candidateActivities = activities.stream()
+                .map(place -> new GeminiCandidatePlaceDto(place, place.getLatitude(), place.getLongitude()))
+                .toList();
+
+        List<GeminiCandidatePlaceDto> candidateRestaurants = restaurants.stream()
+                .map(place -> new GeminiCandidatePlaceDto(place, place.getLatitude(), place.getLongitude()))
+                .toList();
+
+        String activitiesJson;
+        String restaurantsJson;
+        String stylesJson;
+
+        try {
+            activitiesJson = objectMapper.writeValueAsString(candidateActivities);
+            restaurantsJson = objectMapper.writeValueAsString(candidateRestaurants);
+            stylesJson = objectMapper.writeValueAsString(styles);
+        } catch (Exception e) {
+            throw new BusinessException(
+                    ErrorCode.FORBIDDEN_EXCEPTION,
+                    "후보 장소 데이터를 JSON으로 변환할 수 없습니다."
+            );
+        }
+
+        String prompt = String.format("""
+        당신은 전문 여행 일정 설계 플래너입니다. 전체 여행 일정 중 **%d일차** 일정을 사용자의 피드백 요구사항에 맞게 수정해야 합니다. 아래의 규칙을 절대적으로 준수하세요.
+
+        [여행 목적지]
+        %s
+
+        [수정 대상 일자]
+        Day %d
+
+        [여행 그룹 성향]
+        %s
+
+        [현재 작성된 전체 일정]
+        %s
+
+        [사용자의 추가 수정 요구사항]
+        %s
+
+        [활용 가능한 추가 관광지 후보]
+        %s
+
+        [활용 가능한 추가 음식점 후보]
+        %s
+
+        [요구사항]
+        1. 사용자의 추가 수정 요구사항(예: "%s")을 반영하여 %d일차 일정을 수정하세요.
+        2. `summaryTitle` 필드에 AI 제안 요약 제목을 작성하세요. (예: "AI 제안 - Day%d 오후만 다시 짰어요")
+        3. `originalPlace` 필드에는 이번 사용자 요청으로 인해 **기존 일정에서 제외되거나 변경되는 대상 장소 1곳**의 정보를 넣으세요. (contentId, visitTime, 장소명 및 소요시간 텍스트)
+        4. `newPlaces` 리스트에는 **기존 장소를 대체하여 새로 변경/추가되는 장소들**의 정보를 순서대로 넣으세요.
+        5. `reason` 필드에는 화면 UI처럼 직관적인 타이틀/이유를 작성하세요. (예: "송도 해상케이블카 (1시간 · 앉아서 뷰)", "카페 브리즈 (휴식 1시간 추가)")
+        6. 반드시 위에 제공된 후보 장소들과 기존 일정 장소들의 'contentId' 중 존재하는 정확한 값만 사용하세요.
+        7. 마크다운(```json) 없이 순수 JSON만 반환해야 합니다.
+
+        [응답 JSON 스키마]
+        {
+          "summaryTitle": "AI 제안 - Day%d 핵심 수정 요약 타이틀",
+          "dayNumber": %d,
+          "originalPlace": {
+            "contentId": "기존 장소의 contentId",
+            "visitTime": "15:00",
+            "placeName": "기존 장소명 (예: 감천문화마을 (2시간))"
+          },
+          "newPlaces": [
+            {
+              "contentId": "새 장소의 contentId",
+              "visitTime": "15:30",
+              "placeType": "TOUR / RESTAURANT",
+              "reason": "장소명 및 요약 설명 (예: 송도 해상케이블카 (1시간 · 앉아서 뷰))"
+            }
+          ]
+        }
+        """, dayNumber, destination.name(), dayNumber, stylesJson, currentScheduleJson, userPrompt, activitiesJson, restaurantsJson, userPrompt, dayNumber, dayNumber, dayNumber, dayNumber);
+
+        return callGeminiApiForUpdate(prompt);
+    }
+
+    // AI 수정 제안 전용 API 호출 및 역직렬화 메서드
+    private AiScheduleUpdateResDto callGeminiApiForUpdate(String prompt) {
         Map<String, Object> requestBody = Map.of(
                 "contents", List.of(
                         Map.of("parts", List.of(Map.of("text", prompt)))
@@ -118,7 +212,6 @@ public class GeminiService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
-        // 4. API 호출
         String url = GEMINI_URL.formatted(model);
 
         ResponseEntity<GeminiResDto> response = template.exchange(
@@ -130,7 +223,6 @@ public class GeminiService {
 
         GeminiResDto body = response.getBody();
 
-        // 5. 응답 유효성 검증
         if (body == null
                 || body.getCandidates() == null
                 || body.getCandidates().isEmpty()
@@ -152,7 +244,65 @@ public class GeminiService {
                 .getText();
         log.info("Gemini Raw Response: {}", content);
 
-        // 6. DTO 매핑
+        try {
+            return objectMapper.readValue(content, AiScheduleUpdateResDto.class);
+        } catch (Exception e) {
+            log.error("JSON Parsing Exception: ", e);
+            throw new BusinessException(
+                    ErrorCode.FORBIDDEN_EXCEPTION,
+                    "Gemini 일정 응답을 변환할 수 없습니다."
+            );
+        }
+    }
+
+    // 3. Gemini API 호출 공통 로직
+    private AiScheduleResDto callGeminiApi(String prompt) {
+        Map<String, Object> requestBody = Map.of(
+                "contents", List.of(
+                        Map.of("parts", List.of(Map.of("text", prompt)))
+                ),
+                "generationConfig", Map.of(
+                        "responseMimeType", "application/json",
+                        "temperature", 0.8
+                )
+        );
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+
+        String url = GEMINI_URL.formatted(model);
+
+        ResponseEntity<GeminiResDto> response = template.exchange(
+                url,
+                HttpMethod.POST,
+                entity,
+                GeminiResDto.class
+        );
+
+        GeminiResDto body = response.getBody();
+
+        if (body == null
+                || body.getCandidates() == null
+                || body.getCandidates().isEmpty()
+                || body.getCandidates().get(0).getContent() == null
+                || body.getCandidates().get(0).getContent().getParts() == null
+                || body.getCandidates().get(0).getContent().getParts().isEmpty()) {
+
+            throw new BusinessException(
+                    ErrorCode.FORBIDDEN_EXCEPTION,
+                    "Gemini 일정 생성 응답이 없습니다."
+            );
+        }
+
+        String content = body.getCandidates()
+                .get(0)
+                .getContent()
+                .getParts()
+                .get(0)
+                .getText();
+        log.info("Gemini Raw Response: {}", content);
+
         try {
             return objectMapper.readValue(content, AiScheduleResDto.class);
         } catch (Exception e) {

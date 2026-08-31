@@ -9,9 +9,11 @@ import com.valuego.tourplace.api.dto.GroupStyleDto;
 import com.valuego.tourplace.api.dto.response.AiScheduleResDto;
 import com.valuego.tourplace.api.dto.response.TourPlace;
 import com.valuego.tourplace.api.dto.response.TravelScheduleResDto;
+import com.valuego.travel.api.dto.response.AiScheduleUpdateResDto;
 import com.valuego.travel.entity.Travel;
 import com.valuego.travel.entity.TravelDay;
 import com.valuego.travel.entity.TravelPlace;
+import com.valuego.travel.entity.repository.TravelPlaceRepository;
 import com.valuego.travel.entity.repository.TravelRepository;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -21,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -36,6 +39,8 @@ public class AiScheduleService {
     private final TravelRepository travelRepository;
     private final GeminiService geminiService;
     private final DistanceService distanceService;
+    private final TravelScheduleMapper travelScheduleMapper;
+    private final TravelPlaceRepository travelPlaceRepository;
 
     // 1. 관광공사 api 호출
     public TourCandidatesResult fetchTourCandidates(Group group) throws Exception {
@@ -77,24 +82,17 @@ public class AiScheduleService {
         return new TourCandidatesResult(activities, restaurants);
     }
 
-    // 2. Gemini 호출 및 경량화된 DB 저장 (실시간 TourAPI 결합 반환)
+    // 2. Gemini 최초 호출 및 DB 저장
     @Transactional
     public TravelScheduleResDto generateAndSaveSchedule(Long groupId, Group group, List<TourPlace> activities, List<TourPlace> restaurants) {
-        // 1. 그룹 여행 스타일 조회
         List<GroupStyleDto> styles = groupStyleService.getGroupStyles(groupId);
         if (styles.isEmpty()) {
-            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR,
-                    "여행 스타일이 설정되지 않았습니다.");
+            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "여행 스타일이 설정되지 않았습니다.");
         }
 
-        // 2. 여행지 및 기간 계산
         Destination destination = group.getDestination();
-        int days = (int) ChronoUnit.DAYS.between(
-                group.getStartDate().toLocalDate(),
-                group.getEndDate().toLocalDate()
-        ) + 1;
+        int days = calculateDays(group);
 
-        // 3. gemini 압축 프롬프트 및 JSON 호출
         AiScheduleResDto aiResult = geminiService.generate(
                 destination,
                 days,
@@ -103,16 +101,95 @@ public class AiScheduleService {
                 restaurants
         );
 
-        // 4. 기존 일정 삭제
+        return saveScheduleToDb(groupId, group, aiResult, activities, restaurants);
+    }
+
+    // 수정 요청
+    @Transactional
+    public TravelScheduleResDto saveSuggestedSchedule(Long groupId, Group group, AiScheduleUpdateResDto suggestedSchedule) {
+        // 1. 해당 그룹의 Travel 일정 조회
+        Travel travel = travelRepository.findByGroupId(groupId)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.TRAVEL_NOT_FOUND_EXCEPTION,
+                        "수정할 여행 일정을 찾을 수 없습니다."
+                ));
+
+        // 2. 수정 대상 Day(TravelDay) 조회
+        TravelDay targetDay = travel.getDays().stream()
+                .filter(day -> day.getDayNumber().equals(suggestedSchedule.dayNumber()))
+                .findFirst()
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.TRAVEL_DAY_NOT_FOUND_EXCEPTION,
+                        suggestedSchedule.dayNumber() + "일차 일정을 찾을 수 없습니다."
+                ));
+
+        // 3. 삭제(대체)할 기존 장소 확인 및 DB 삭제
+        AiScheduleUpdateResDto.OriginalPlaceDto originalPlace = suggestedSchedule.originalPlace();
+
+        if (originalPlace != null && originalPlace.contentId() != null) {
+            List<TravelPlace> placesToRemove = targetDay.getPlaces().stream()
+                    .filter(place -> originalPlace.contentId().equals(place.getContentId()))
+                    .toList();
+
+            if (!placesToRemove.isEmpty()) {
+                travelPlaceRepository.deleteAll(placesToRemove);
+                targetDay.getPlaces().removeAll(placesToRemove);
+            }
+        }
+
+        // 4. 새로운 장소(newPlaces) 객체 생성 및 리스트 추가
+        List<AiScheduleUpdateResDto.NewPlaceDto> newPlaces = suggestedSchedule.newPlaces();
+        if (newPlaces != null && !newPlaces.isEmpty()) {
+            for (int i = 0; i < newPlaces.size(); i++) {
+                AiScheduleUpdateResDto.NewPlaceDto newPlace = newPlaces.get(i);
+                TourPlace tourDetail = tourApiService.getPlaceDetail(newPlace.contentId());
+
+                LocalTime visitTime = null;
+                if (newPlace.visitTime() != null && !newPlace.visitTime().isBlank()) {
+                    visitTime = LocalTime.parse(newPlace.visitTime(), DateTimeFormatter.ofPattern("HH:mm"));
+                }
+
+                // scheduleOrder에 임시 값(999 등) 지정 후 저장 (NOT NULL 제약조건 우회)
+                TravelPlace travelPlace = TravelPlace.builder()
+                        .travelDay(targetDay)
+                        .group(group)
+                        .contentId(newPlace.contentId())
+                        .contentTypeId(tourDetail != null ? tourDetail.getContentTypeId() : "UNKNOWN")
+                        .customName(tourDetail != null ? tourDetail.getName() : null)
+                        .visitTime(visitTime)
+                        .scheduleOrder(999) // NOT NULL 에러 방지를 위한 기본값 세팅
+                        .placeType(newPlace.placeType())
+                        .reason(newPlace.reason())
+                        .build();
+
+                TravelPlace savedPlace = travelPlaceRepository.save(travelPlace);
+                targetDay.getPlaces().add(savedPlace);
+            }
+        }
+
+        // 5. 방문 시간(visitTime) 기준으로 일정 순서 정렬 및 scheduleOrder 올바르게 재정렬 (1부터 시작)
+        List<TravelPlace> allPlaces = new ArrayList<>(targetDay.getPlaces());
+        allPlaces.sort(Comparator.comparing(
+                TravelPlace::getVisitTime,
+                Comparator.nullsLast(Comparator.naturalOrder())
+        ));
+
+        for (int i = 0; i < allPlaces.size(); i++) {
+            allPlaces.get(i).updateScheduleOrder(i + 1);
+        }
+
+        return travelScheduleMapper.toScheduleResDtoWithLiveTourApi(travel);
+    }
+
+    // 공통 DB 저장 로직
+    private TravelScheduleResDto saveScheduleToDb(Long groupId, Group group, AiScheduleResDto aiResult, List<TourPlace> activities, List<TourPlace> restaurants) {
         travelRepository.findByGroupId(groupId).ifPresent(travelRepository::delete);
 
-        // 5. Schedule 생성
         Travel travel = new Travel(group);
         Map<String, TourPlace> placeMap = new HashMap<>();
         activities.forEach(place -> placeMap.put(place.getContentId(), place));
         restaurants.forEach(place -> placeMap.put(place.getContentId(), place));
 
-        // 6. entity 매핑 및 거리 계산
         for (AiScheduleResDto.Day aiDay : aiResult.days()) {
             TravelDay travelDay = new TravelDay(aiDay.dayNumber());
             double totalDistance = 0.0;
@@ -165,15 +242,20 @@ public class AiScheduleService {
         }
 
         Travel savedTravel = travelRepository.save(travel);
+        return travelScheduleMapper.toScheduleResDtoWithLiveTourApi(savedTravel);
+    }
 
-        return TravelScheduleResDto.of(savedTravel, placeMap);
+    public int calculateDays(Group group) {
+        return (int) ChronoUnit.DAYS.between(
+                group.getStartDate().toLocalDate(),
+                group.getEndDate().toLocalDate()
+        ) + 1;
     }
 
     private double round(double value) {
         return Math.round(value * 10.0) / 10.0;
     }
 
-    // 내부 dto
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
