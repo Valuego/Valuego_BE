@@ -4,10 +4,13 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer;
 import com.valuego.travel.entity.Travel;
+import com.valuego.travel.entity.TravelDay;
+import com.valuego.travel.entity.TravelPlace;
 import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalTime;
+import java.util.Comparator;
 import java.util.List;
 
 @Getter
@@ -47,16 +50,22 @@ public class TravelScheduleResDto {
         private String memoUrl;
     }
 
+    private static final Comparator<TravelPlace> PLACE_COMPARATOR = Comparator
+            .comparing(TravelPlace::getScheduleOrder, Comparator.nullsFirst(Comparator.naturalOrder()))
+            .thenComparing(TravelPlace::getVisitTime, Comparator.nullsFirst(Comparator.naturalOrder()));
+
     public static TravelScheduleResDto from(Travel travel) {
         return TravelScheduleResDto.builder()
                 .travelId(travel.getId())
                 .days(
                         travel.getDays().stream()
+                                .sorted(Comparator.comparing(TravelDay::getDayNumber))
                                 .map(day -> Day.builder()
                                         .dayNumber(day.getDayNumber())
                                         .totalDistanceKm(day.getTotalDistanceKm())
                                         .places(
                                                 day.getPlaces().stream()
+                                                        .sorted(PLACE_COMPARATOR)
                                                         .map(place -> Place.builder()
                                                                 .travelPlaceId(place.getId())
                                                                 .contentId(place.getContentId())
@@ -84,11 +93,13 @@ public class TravelScheduleResDto {
                 .travelId(travel.getId())
                 .days(
                         travel.getDays().stream()
+                                .sorted(Comparator.comparing(TravelDay::getDayNumber))
                                 .map(day -> Day.builder()
                                         .dayNumber(day.getDayNumber())
                                         .totalDistanceKm(day.getTotalDistanceKm())
                                         .places(
                                                 day.getPlaces().stream()
+                                                        .sorted(PLACE_COMPARATOR)
                                                         .map(place -> {
                                                             TourPlace liveData = (place.getContentId() != null)
                                                                     ? livePlaceMap.get(place.getContentId())
