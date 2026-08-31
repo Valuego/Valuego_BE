@@ -1,6 +1,8 @@
 package com.valuego.tourplace.api.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer;
 import com.valuego.travel.entity.Travel;
 import lombok.Builder;
 import lombok.Getter;
@@ -30,6 +32,7 @@ public class TravelScheduleResDto {
         private String contentId;
 
         @JsonFormat(pattern = "HH:mm")
+        @JsonSerialize(using = LocalTimeSerializer.class)
         private LocalTime visitTime;
 
         private String name;

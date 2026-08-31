@@ -1,17 +1,25 @@
 package com.valuego.travel.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.valuego.global.common.code.ErrorCode;
 import com.valuego.global.common.exception.BusinessException;
 import com.valuego.global.common.exception.EntityFinderException;
 import com.valuego.global.common.exception.ValidMemberException;
 import com.valuego.groups.api.dto.response.GroupStatusResDto;
 import com.valuego.groups.entity.Group;
+import com.valuego.styles.service.GroupStyleService;
+import com.valuego.tourplace.api.dto.GroupStyleDto;
+import com.valuego.tourplace.api.dto.response.AiScheduleResDto;
 import com.valuego.tourplace.api.dto.response.TourPlace;
 import com.valuego.tourplace.api.dto.response.TravelScheduleResDto;
+import com.valuego.tourplace.service.AiScheduleService;
+import com.valuego.tourplace.service.GeminiService;
 import com.valuego.tourplace.service.TourApiService;
 import com.valuego.tourplace.service.TravelScheduleMapper;
+import com.valuego.travel.api.dto.request.AiScheduleUpdateReqDto;
 import com.valuego.travel.api.dto.request.TravelPlaceCreateReqDto;
 import com.valuego.travel.api.dto.request.TravelPlaceUpdateReqDto;
+import com.valuego.travel.api.dto.response.AiScheduleUpdateResDto;
 import com.valuego.travel.api.dto.response.TravelPlaceInfoResDto;
 import com.valuego.travel.entity.Travel;
 import com.valuego.travel.entity.TravelDay;
@@ -36,6 +44,10 @@ public class TravelService {
     private final TravelScheduleMapper travelScheduleMapper;
     private final TourApiService tourApiService;
     private final TravelPlaceRepository travelPlaceRepository;
+    private final AiScheduleService aiScheduleService;
+    private final GeminiService geminiService;
+    private final GroupStyleService groupStyleService;
+    private final ObjectMapper objectMapper;
 
     // 전체 일정 조회
     public TravelScheduleResDto getAllSchedule(Principal principal, Long groupId, String guestToken) {
@@ -137,5 +149,41 @@ public class TravelService {
         }
     }
 
-    // todo: 일정 ai 요청 수정
+    // 1. 일정 AI 수정 요청 제안 (모달 미리보기용 - DB 미반영)
+    public AiScheduleUpdateResDto suggestAiScheduleUpdate(Principal principal, AiScheduleUpdateReqDto reqDto, String guestToken) throws Exception {
+        Group group = entityFinderException.getGroupById(reqDto.groupId());
+        validMemberException.validateGroupMember(principal, guestToken, group);
+
+        Travel currentTravel = travelRepository.findByGroupId(reqDto.groupId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRAVEL_NOT_FOUND_EXCEPTION, "기존 일정을 찾을 수 없습니다."));
+
+        TravelScheduleResDto currentScheduleDto = travelScheduleMapper.toScheduleResDtoWithLiveTourApi(currentTravel);
+        String currentScheduleJson = objectMapper.writeValueAsString(currentScheduleDto);
+
+        AiScheduleService.TourCandidatesResult candidates = aiScheduleService.fetchTourCandidates(group);
+        List<GroupStyleDto> styles = groupStyleService.getGroupStyles(reqDto.groupId());
+
+        return geminiService.generateUpdate(
+                group.getDestination(),
+                reqDto.dayNum(),
+                styles,
+                candidates.getActivities(),
+                candidates.getRestaurants(),
+                currentScheduleJson,
+                reqDto.prompt()
+        );
+    }
+
+    // 2. 일정 AI 수정 요청 확정 ("이걸로 반영하기" - DB 일정 반영)
+    @Transactional
+    public TravelScheduleResDto applyAiScheduleUpdate(Principal principal, Long groupId, AiScheduleUpdateResDto suggestedSchedule, String guestToken) {
+        Group group = entityFinderException.getGroupById(groupId);
+        validMemberException.validateGroupMember(principal, guestToken, group);
+
+        // AiScheduleService에 구현된 saveSuggestedSchedule 호출하여 DB 수정 반영
+        return aiScheduleService.saveSuggestedSchedule(groupId, group, suggestedSchedule);
+    }
+
+
+
 }

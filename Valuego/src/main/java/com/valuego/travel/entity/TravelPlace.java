@@ -1,5 +1,8 @@
 package com.valuego.travel.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer;
 import com.valuego.groups.entity.Group;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -34,6 +37,9 @@ public class TravelPlace {
     private String contentTypeId;
     private String customName;
     private String memoUrl;
+
+    @JsonSerialize(using = LocalTimeSerializer.class)
+    @JsonFormat(pattern = "HH:mm")
     private LocalTime visitTime;
 
     @Column(nullable = false)

@@ -7,10 +7,13 @@ import com.valuego.groups.api.dto.response.GroupMemberInfoResDto;
 import com.valuego.groups.api.dto.response.GroupStatusResDto;
 import com.valuego.groups.entity.Group;
 import com.valuego.groups.service.GroupService;
+import com.valuego.tourplace.api.dto.response.AiScheduleResDto;
 import com.valuego.tourplace.api.dto.response.TravelScheduleResDto;
 import com.valuego.tourplace.service.AiScheduleService;
+import com.valuego.travel.api.dto.request.AiScheduleUpdateReqDto;
 import com.valuego.travel.api.dto.request.TravelPlaceCreateReqDto;
 import com.valuego.travel.api.dto.request.TravelPlaceUpdateReqDto;
+import com.valuego.travel.api.dto.response.AiScheduleUpdateResDto;
 import com.valuego.travel.api.dto.response.TravelPlaceInfoResDto;
 import com.valuego.travel.entity.Travel;
 import com.valuego.travel.service.TravelService;
@@ -108,5 +111,26 @@ public class TravelController {
         travelService.deletePlace(principal, travelPlaceId, guestToken);
 
         return ApiResTemplate.successWithNoContent(SuccessCode.DELETE_SUCCESS);
+    }
+
+    @Operation(summary = "AI 일정 수정 제안 (모달)", description = "사용자의 피드백 프롬프트(예: '더 느긋하게')를 받아 AI 제안 일정을 반환합니다. (DB 미반영)")
+    @PostMapping("/ai/suggest")
+    public ApiResTemplate<AiScheduleUpdateResDto> suggestAiScheduleUpdate(Principal principal,
+                                                                          @RequestBody AiScheduleUpdateReqDto reqDto,
+                                                                          @CookieValue(value = "guestAccessToken", required = false) String guestToken) throws Exception {
+        AiScheduleUpdateResDto aiScheduleUpdateResDto = travelService.suggestAiScheduleUpdate(principal, reqDto, guestToken);
+
+        return ApiResTemplate.successResponse(SuccessCode.SUCCESS, aiScheduleUpdateResDto);
+    }
+
+    @Operation(summary = "AI 제안 일정 DB 반영 (이걸로 반영하기)", description = "AI가 제안한 수정 일정(AiScheduleUpdateResDto)을 최종 선택하여 DB를 갱신합니다.")
+    @PostMapping("/ai/apply")
+    public ApiResTemplate<TravelScheduleResDto> applyAiScheduleUpdate(Principal principal,
+                                                                      @RequestParam Long groupId,
+                                                                      @RequestBody AiScheduleUpdateResDto suggestedSchedule,
+                                                                      @CookieValue(value = "guestAccessToken", required = false) String guestToken) {
+        TravelScheduleResDto result = travelService.applyAiScheduleUpdate(principal, groupId, suggestedSchedule, guestToken);
+
+        return ApiResTemplate.successResponse(SuccessCode.SUCCESS, result);
     }
 }
