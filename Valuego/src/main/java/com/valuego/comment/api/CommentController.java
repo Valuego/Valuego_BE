@@ -7,6 +7,7 @@ import com.valuego.comment.service.CommentService;
 import com.valuego.global.common.code.SuccessCode;
 import com.valuego.global.common.template.ApiResTemplate;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +17,7 @@ import java.security.Principal;
 @RestController
 @RequestMapping("/api/v1/comments")
 @RequiredArgsConstructor
+@Tag(name = "Comment API", description = "장소 댓글 API")
 public class CommentController {
 
     private final CommentService commentService;

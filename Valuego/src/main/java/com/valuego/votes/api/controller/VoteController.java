@@ -6,6 +6,7 @@ import com.valuego.votes.api.dto.request.VoteReqDto;
 import com.valuego.votes.api.dto.response.VoteResDto;
 import com.valuego.votes.service.VoteService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +16,7 @@ import java.security.Principal;
 @RestController
 @RequestMapping("/api/v1/places/vote")
 @RequiredArgsConstructor
+@Tag(name = "Vote API", description = "장소 투표 API")
 public class VoteController {
 
     private final VoteService voteService;
