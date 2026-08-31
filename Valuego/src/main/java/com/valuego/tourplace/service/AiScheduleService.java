@@ -104,6 +104,7 @@ public class AiScheduleService {
         return saveScheduleToDb(groupId, group, aiResult, activities, restaurants);
     }
 
+    // 수정 요청
     @Transactional
     public TravelScheduleResDto saveSuggestedSchedule(Long groupId, Group group, AiScheduleUpdateResDto suggestedSchedule) {
         // 1. 해당 그룹의 Travel 일정 조회
@@ -177,7 +178,6 @@ public class AiScheduleService {
             allPlaces.get(i).updateScheduleOrder(i + 1);
         }
 
-        // 6. 갱신된 전체 일정 반환
         return travelScheduleMapper.toScheduleResDtoWithLiveTourApi(travel);
     }
 

@@ -9,7 +9,6 @@ import com.valuego.groups.api.dto.response.GroupStatusResDto;
 import com.valuego.groups.entity.Group;
 import com.valuego.styles.service.GroupStyleService;
 import com.valuego.tourplace.api.dto.GroupStyleDto;
-import com.valuego.tourplace.api.dto.response.AiScheduleResDto;
 import com.valuego.tourplace.api.dto.response.TourPlace;
 import com.valuego.tourplace.api.dto.response.TravelScheduleResDto;
 import com.valuego.tourplace.service.AiScheduleService;
@@ -149,13 +148,14 @@ public class TravelService {
         }
     }
 
-    // 1. 일정 AI 수정 요청 제안 (모달 미리보기용 - DB 미반영)
+    // 일정 AI 수정 요청 제안 DB - 미반영
     public AiScheduleUpdateResDto suggestAiScheduleUpdate(Principal principal, AiScheduleUpdateReqDto reqDto, String guestToken) throws Exception {
         Group group = entityFinderException.getGroupById(reqDto.groupId());
         validMemberException.validateGroupMember(principal, guestToken, group);
 
         Travel currentTravel = travelRepository.findByGroupId(reqDto.groupId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.TRAVEL_NOT_FOUND_EXCEPTION, "기존 일정을 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRAVEL_NOT_FOUND_EXCEPTION
+                        , ErrorCode.TRAVEL_NOT_FOUND_EXCEPTION.getMessage()));
 
         TravelScheduleResDto currentScheduleDto = travelScheduleMapper.toScheduleResDtoWithLiveTourApi(currentTravel);
         String currentScheduleJson = objectMapper.writeValueAsString(currentScheduleDto);
@@ -174,16 +174,12 @@ public class TravelService {
         );
     }
 
-    // 2. 일정 AI 수정 요청 확정 ("이걸로 반영하기" - DB 일정 반영)
+    // 일정 AI 수정 요청 확정
     @Transactional
     public TravelScheduleResDto applyAiScheduleUpdate(Principal principal, Long groupId, AiScheduleUpdateResDto suggestedSchedule, String guestToken) {
         Group group = entityFinderException.getGroupById(groupId);
         validMemberException.validateGroupMember(principal, guestToken, group);
 
-        // AiScheduleService에 구현된 saveSuggestedSchedule 호출하여 DB 수정 반영
         return aiScheduleService.saveSuggestedSchedule(groupId, group, suggestedSchedule);
     }
-
-
-
 }

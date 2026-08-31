@@ -113,7 +113,7 @@ public class TravelController {
         return ApiResTemplate.successWithNoContent(SuccessCode.DELETE_SUCCESS);
     }
 
-    @Operation(summary = "AI 일정 수정 제안 (모달)", description = "사용자의 피드백 프롬프트(예: '더 느긋하게')를 받아 AI 제안 일정을 반환합니다. (DB 미반영)")
+    @Operation(summary = "AI 일정 수정 요청", description = "사용자의 피드백 프롬프트(예: '더 느긋하게')를 받아 AI 제안 일정을 반환합니다. (DB 미반영)")
     @PostMapping("/ai/suggest")
     public ApiResTemplate<AiScheduleUpdateResDto> suggestAiScheduleUpdate(Principal principal,
                                                                           @RequestBody AiScheduleUpdateReqDto reqDto,
@@ -123,14 +123,14 @@ public class TravelController {
         return ApiResTemplate.successResponse(SuccessCode.SUCCESS, aiScheduleUpdateResDto);
     }
 
-    @Operation(summary = "AI 제안 일정 DB 반영 (이걸로 반영하기)", description = "AI가 제안한 수정 일정(AiScheduleUpdateResDto)을 최종 선택하여 DB를 갱신합니다.")
+    @Operation(summary = "AI 제안 일정 확정", description = "AI가 제안한 수정 일정(AiScheduleUpdateResDto)을 최종 선택하여 DB를 갱신합니다.")
     @PostMapping("/ai/apply")
     public ApiResTemplate<TravelScheduleResDto> applyAiScheduleUpdate(Principal principal,
                                                                       @RequestParam Long groupId,
                                                                       @RequestBody AiScheduleUpdateResDto suggestedSchedule,
                                                                       @CookieValue(value = "guestAccessToken", required = false) String guestToken) {
-        TravelScheduleResDto result = travelService.applyAiScheduleUpdate(principal, groupId, suggestedSchedule, guestToken);
+        TravelScheduleResDto travelScheduleResDto = travelService.applyAiScheduleUpdate(principal, groupId, suggestedSchedule, guestToken);
 
-        return ApiResTemplate.successResponse(SuccessCode.SUCCESS, result);
+        return ApiResTemplate.successResponse(SuccessCode.SUCCESS, travelScheduleResDto);
     }
 }
