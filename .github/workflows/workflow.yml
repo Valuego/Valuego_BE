@@ -20,7 +20,7 @@ jobs:
 
       - name: Gradle 권한 설정
         run: |
-          cd SossBar
+          cd Valuego
           chmod +x gradlew
 
       - name: Gradle 캐싱
@@ -34,10 +34,10 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: Spring Boot Build
-        run: cd SossBar && ./gradlew clean build --exclude-task test
+        run: cd Valuego && ./gradlew clean build --exclude-task test
 
       - name: Docker 이미지 Build
-        run: cd SossBar && docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKER_IMAGE }} .
+        run: cd Valuego && docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKER_IMAGE }} .
 
       - name: Docker Hub 로그인
         uses: docker/login-action@v2
