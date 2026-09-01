@@ -11,6 +11,7 @@ import com.valuego.votes.entity.Vote;
 import com.valuego.votes.entity.VoteStatus;
 import com.valuego.votes.entity.repository.VoteRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,10 +39,14 @@ public class VoteService {
 
         VoteStatus myStatus = null;
         if (principal != null) {
-            User user = entityFinderException.getUserFromPrincipal(principal);
-            myStatus = voteRepository.findByUserIdAndTravelPlaceId(user.getId(), travelPlaceId)
-                    .map(Vote::getVoteStatus)
-                    .orElse(null);
+            try {
+                User user = entityFinderException.getUserFromPrincipal(principal);
+                myStatus = voteRepository.findByUserIdAndTravelPlaceId(user.getId(), travelPlaceId)
+                        .map(Vote::getVoteStatus)
+                        .orElse(null);
+            } catch (Exception e) {
+                myStatus = null;
+            }
         }
 
         return VoteResDto.of(likeCount, dislikeCount, totalGroupMemberCount, myStatus);
@@ -50,12 +55,26 @@ public class VoteService {
     // 토글 생성
     @Transactional
     public VoteResDto toggleVote(Principal principal, Long travelPlaceId, VoteReqDto voteReqDto, String guestToken) {
+        if (principal == null) {
+            throw new IllegalArgumentException("로그인한 사용자만 투표할 수 있습니다.");
+        }
+
         TravelPlace travelPlace = entityFinderException.getTravelPlaceById(travelPlaceId);
         Group group = travelPlace.getGroup();
         validMemberException.validateGroupMember(principal, guestToken, group);
         User user = entityFinderException.getUserFromPrincipal(principal);
 
-        Optional<Vote> existingVote = voteRepository.findByUserIdAndTravelPlaceId(user.getId(), travelPlaceId);
+        try {
+            processToggleVote(user, travelPlace, voteReqDto);
+        } catch (DataIntegrityViolationException e) {
+            processToggleVote(user, travelPlace, voteReqDto);
+        }
+
+        return getTravelVote(principal, travelPlaceId, guestToken);
+    }
+
+    private void processToggleVote(User user, TravelPlace travelPlace, VoteReqDto voteReqDto) {
+        Optional<Vote> existingVote = voteRepository.findByUserIdAndTravelPlaceId(user.getId(), travelPlace.getId());
 
         if (existingVote.isPresent()) {
             Vote vote = existingVote.get();
@@ -71,8 +90,7 @@ public class VoteService {
                     .voteStatus(voteReqDto.voteStatus())
                     .build();
             voteRepository.save(newVote);
+            voteRepository.flush();
         }
-
-        return getTravelVote(principal, travelPlaceId, guestToken);
     }
 }

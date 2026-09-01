@@ -21,7 +21,7 @@ public record VoteResDto(
     ) {
         long totalParticipantCount = likeCount + dislikeCount;
         int likePercentage = totalParticipantCount == 0 ? 0 : (int) Math.round(((double) likeCount / totalParticipantCount) * 100);
-        int dislikePercentage = totalParticipantCount == 0 ? 0 : (int) Math.round(((double) dislikeCount / totalParticipantCount) * 100);
+        int dislikePercentage = totalParticipantCount == 0 ? 0 : 100 - likePercentage;
 
         return VoteResDto.builder()
                 .likeCount(likeCount)
