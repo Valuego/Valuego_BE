@@ -1,5 +1,8 @@
 package com.valuego.global.common.exception;
 
+import com.valuego.effort.entity.EffortItem;
+import com.valuego.effort.entity.repository.EffortItemRepository;
+import com.valuego.effort.entity.repository.EffortRepository;
 import com.valuego.games.entity.Game;
 import com.valuego.games.entity.repository.GameRepository;
 import com.valuego.global.common.code.ErrorCode;
@@ -34,6 +37,8 @@ public class EntityFinderException {
     private final TravelRepository travelRepository;
     private final TravelPlaceRepository travelPlaceRepository;
     private final TravelDayRepository travelDayRepository;
+    private final EffortItemRepository effortItemRepository;
+    private final EffortRepository effortRepository;
 
     public User getUserFromPrincipal(Principal principal) {
         Long id = Long.parseLong(principal.getName());
@@ -109,5 +114,11 @@ public class EntityFinderException {
         return travelDayRepository.findById(travelDayId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRAVEL_DAY_NOT_FOUND_EXCEPTION
                         , ErrorCode.TRAVEL_DAY_NOT_FOUND_EXCEPTION.getMessage()));
+    }
+
+    public EffortItem getEffortItemById(Long effortItemId) {
+        return effortItemRepository.findById(effortItemId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.EFFORT_ITEM_NOT_FOUND_EXCEPTION
+                        , ErrorCode.EFFORT_ITEM_NOT_FOUND_EXCEPTION.getMessage()));
     }
 }

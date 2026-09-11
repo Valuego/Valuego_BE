@@ -50,7 +50,11 @@ public enum ErrorCode {
     // TRAVEL
     TRAVEL_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "여행을 찾을 수 없습니다.", "TRAVEL-001"),
     TRAVEL_PLACE_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "여행 장소를 찾을 수 없습니다.", "TRAVEL-002"),
-    TRAVEL_DAY_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "여행 날짜를 찾을 수 없습니다.", "TRAVEL-003");
+    TRAVEL_DAY_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "여행 날짜를 찾을 수 없습니다.", "TRAVEL-003"),
+
+    // EFFORT
+    EFFORT_ITEM_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "수고 항목을 찾을 수 없습니다.", "EFFORT-001"),
+    EFFORT_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "수고 회고를 찾을 수 없습니다.", "EFFORT-002");
 
     private final HttpStatus httpStatus;
     private final String message;

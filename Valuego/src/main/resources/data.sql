@@ -4,3 +4,8 @@ VALUES (1, 'test@valuego.com', '테스트 계정', 'https://cdn.pixabay.com/phot
 insert IGNORE INTO user_notification_agree(user_id, notify_comments, notify_reminders, notify_settlement, notify_marketing)
 VALUES
 (1, true, true, true, true);
+
+INSERT IGNORE INTO effort_item (id, group_id, title, is_custom) VALUES (1, NULL, '여행 계획', false);
+INSERT IGNORE INTO effort_item (id, group_id, title, is_custom) VALUES (2, NULL, '총무', false);
+INSERT IGNORE INTO effort_item (id, group_id, title, is_custom) VALUES (3, NULL, '사진', false);
+INSERT IGNORE INTO effort_item (id, group_id, title, is_custom) VALUES (4, NULL, '분위기', false);

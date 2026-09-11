@@ -18,8 +18,9 @@ public class Effort {
     private Long effortAmount;
     private String comment;
 
-    @Enumerated(EnumType.STRING)
-    private EffortType effortType;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "effort_item_id", nullable = false)
+    private EffortItem effortItem;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id", nullable = false)
@@ -34,10 +35,10 @@ public class Effort {
     private GroupMember targetMember;
 
     @Builder
-    public Effort(Long effortAmount, String comment, EffortType effortType, Group group, GroupMember writerMember, GroupMember targetMember) {
+    public Effort(Long effortAmount, String comment, EffortItem effortItem, Group group, GroupMember writerMember, GroupMember targetMember) {
         this.effortAmount = effortAmount;
         this.comment = comment;
-        this.effortType = effortType;
+        this.effortItem = effortItem;
         this.group = group;
         this.writerMember = writerMember;
         this.targetMember = targetMember;
