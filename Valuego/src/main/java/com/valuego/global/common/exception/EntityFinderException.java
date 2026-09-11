@@ -75,6 +75,18 @@ public class EntityFinderException {
                         , ErrorCode.JWT_INVALID.getMessage()));
     }
 
+    public GroupMember getGroupMemberById(Long groupMemberId) {
+        return groupMemberRepository.findById(groupMemberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.GROUP_MEMBER_NOT_FOUND_EXCEPTION
+                        , ErrorCode.GROUP_MEMBER_NOT_FOUND_EXCEPTION.getMessage() + groupMemberId));
+    }
+
+    public GroupMember getGroupMemberByIdAndGroup(Long groupMemberId, Long groupId) {
+        return groupMemberRepository.findByIdAndGroupId(groupMemberId, groupId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.GROUP_MEMBER_NOT_FOUND_EXCEPTION
+                        , ErrorCode.GROUP_MEMBER_NOT_FOUND_EXCEPTION.getMessage()));
+    }
+
     public Game getGameById(Long gameId) {
         return gameRepository.findById(gameId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.GAME_NOT_FOUND_EXCEPTION
