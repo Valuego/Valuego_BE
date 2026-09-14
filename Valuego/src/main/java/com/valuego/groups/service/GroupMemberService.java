@@ -12,8 +12,11 @@ import com.valuego.groups.entity.GroupMember;
 import com.valuego.groups.entity.Enum.MemberRole;
 import com.valuego.groups.entity.Enum.MemberStatus;
 import com.valuego.groups.entity.repository.GroupMemberRepository;
+import com.valuego.notification.api.dto.response.NotificationEvent;
+import com.valuego.notification.domain.NotificationType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +35,7 @@ public class GroupMemberService {
 
     private final GroupMemberRepository groupMemberRepository;
     private final EntityFinderException entityFinderException;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Value("${cookie.secure}")
     private boolean cookieSecure;
@@ -76,9 +80,19 @@ public class GroupMemberService {
                 .group(group)
                 .build();
 
-        groupMemberRepository.save(groupMember);
+        groupMemberRepository.saveAndFlush(groupMember);
 
         List<GroupMember> groupMembers = groupMemberRepository.findAllByGroup(group);
+
+        if (groupMembers.size() == group.getMemberCount()) {
+            List<Long> targetGroupMemberIds = groupMembers.stream()
+                    .map(GroupMember::getId)
+                    .toList();
+
+            eventPublisher.publishEvent(
+                    new NotificationEvent(targetGroupMemberIds, NotificationType.GROUP_JOIN_COMPLETE, group.getId())
+            );
+        }
 
         GroupGuestJoinResDto groupGuestJoinResDto = GroupGuestJoinResDto.from(groupMember, groupMembers);
 
