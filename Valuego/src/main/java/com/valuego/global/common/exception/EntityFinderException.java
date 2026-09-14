@@ -10,6 +10,8 @@ import com.valuego.groups.entity.Group;
 import com.valuego.groups.entity.GroupMember;
 import com.valuego.groups.entity.repository.GroupMemberRepository;
 import com.valuego.groups.entity.repository.GroupRepository;
+import com.valuego.notification.domain.Notification;
+import com.valuego.notification.domain.repository.NotificationRepository;
 import com.valuego.travel.entity.Travel;
 import com.valuego.travel.entity.TravelDay;
 import com.valuego.travel.entity.TravelPlace;
@@ -39,6 +41,7 @@ public class EntityFinderException {
     private final TravelDayRepository travelDayRepository;
     private final EffortItemRepository effortItemRepository;
     private final EffortRepository effortRepository;
+    private final NotificationRepository notificationRepository;
 
     public User getUserFromPrincipal(Principal principal) {
         Long id = Long.parseLong(principal.getName());
@@ -86,6 +89,13 @@ public class EntityFinderException {
                         , ErrorCode.GROUP_MEMBER_NOT_FOUND_EXCEPTION.getMessage() + groupMemberId));
     }
 
+    public GroupMember getGroupMemberByUserId(Long userId, Long groupId) {
+        return groupMemberRepository.findByUserIdAndGroupId(userId, groupId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.GROUP_MEMBER_NOT_FOUND_EXCEPTION
+                        , ErrorCode.GROUP_MEMBER_NOT_FOUND_EXCEPTION.getMessage()
+                ));
+    }
+
     public GroupMember getGroupMemberByIdAndGroup(Long groupMemberId, Long groupId) {
         return groupMemberRepository.findByIdAndGroupId(groupMemberId, groupId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.GROUP_MEMBER_NOT_FOUND_EXCEPTION
@@ -120,5 +130,11 @@ public class EntityFinderException {
         return effortItemRepository.findById(effortItemId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EFFORT_ITEM_NOT_FOUND_EXCEPTION
                         , ErrorCode.EFFORT_ITEM_NOT_FOUND_EXCEPTION.getMessage()));
+    }
+
+    public Notification getNotificationById(Long notificationId) {
+        return notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOTIFICATION_NOT_FOUND_EXCEPTION
+                        , ErrorCode.NOTIFICATION_NOT_FOUND_EXCEPTION.getMessage()));
     }
 }
