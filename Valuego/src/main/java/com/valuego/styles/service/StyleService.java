@@ -11,6 +11,7 @@ import com.valuego.groups.entity.repository.GroupMemberRepository;
 import com.valuego.styles.api.dto.request.StyleReqDto;
 import com.valuego.styles.api.dto.response.MyStyleCardResDto;
 import com.valuego.styles.api.dto.response.StyleAiResDto;
+import com.valuego.styles.api.dto.response.StyleGroupListResDto;
 import com.valuego.styles.api.dto.response.StyleInfoResDto;
 import com.valuego.styles.entity.Enum.BudgetType;
 import com.valuego.styles.entity.Enum.FoodType;
@@ -23,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -38,23 +40,8 @@ public class StyleService {
     // 팀장
     @Transactional
     public StyleInfoResDto createLeaderStyle(Principal principal, Long groupId, StyleReqDto styleReqDto) {
-        User user = entityFinderException.getUserFromPrincipal(principal);
-        Group group = entityFinderException.getGroupById(groupId);
-
-        // 해당 그룹의 팀장인지 확인
-        if (!group.getLeader().getId().equals(user.getId())) {
-            throw new BusinessException(
-                    ErrorCode.FORBIDDEN_EXCEPTION,
-                    "해당 그룹의 팀장만 여행 스타일을 입력할 수 있습니다."
-            );
-        }
-
-        // 해당 그룹의 팀장 GroupMember 조회
-        GroupMember groupMember = groupMemberRepository.findByGroupAndUser(group, user).orElseThrow(
-                () -> new BusinessException(ErrorCode.GROUP_MEMBER_NOT_FOUND_EXCEPTION,
-                        ErrorCode.GROUP_MEMBER_NOT_FOUND_EXCEPTION.getMessage()));
-
-        return saveStyle(groupMember, styleReqDto);
+        GroupMember leader = validateLeader(principal, groupId);
+        return saveStyle(leader, styleReqDto);
     }
 
     // 게스트
@@ -101,15 +88,34 @@ public class StyleService {
         return StyleInfoResDto.from(style);
     }
 
+    // 팀장 그룹 정보 리스트 조회
+    @Transactional(readOnly = true)
+    public List<StyleGroupListResDto> getLeaderGroupList(Principal principal) {
+        if (principal == null) {
+            throw new BusinessException(
+                    ErrorCode.UNAUTHORIZED_EXCEPTION,
+                    "로그인이 필요한 서비스입니다."
+            );
+        }
+
+        User user = entityFinderException.getUserFromPrincipal(principal);
+
+        // 사용자가 팀장(LEADER)으로 속해 있는 모든 그룹 조회
+        List<GroupMember> leaderGroupMembers = groupMemberRepository.findAllByUser(user).stream()
+                .filter(gm -> gm.getMemberRole() == MemberRole.LEADER)
+                .toList();
+
+        return leaderGroupMembers.stream()
+                .map(GroupMember::getGroup)
+                .map(StyleGroupListResDto::from)
+                .toList();
+    }
+
+
     // 팀장 성향 그룹별 조회
     @Transactional(readOnly = true)
-    public MyStyleCardResDto getLeaderStyleCard(Long groupId, Principal principal, String guestToken) {
-        Group group = entityFinderException.getGroupById(groupId);
-        GroupMember member = validMemberException.validateGroupMember(principal, guestToken, group);
-
-        if (member.getMemberRole() != MemberRole.LEADER) {
-            throw new BusinessException(ErrorCode.FORBIDDEN_EXCEPTION, "팀장(카카오 로그인 사용자)만 접근할 수 있는 기능입니다.");
-        }
+    public MyStyleCardResDto getLeaderStyleCard(Long groupId, Principal principal) {
+        GroupMember member = validateLeader(principal, groupId);
 
         Style style = styleRepository.findByGroupMember(member)
                 .orElseThrow(() -> new BusinessException(ErrorCode.STYLE_NOT_FOUND_EXCEPTION
@@ -161,5 +167,42 @@ public class StyleService {
             case CHINESE -> "중식";
             default -> "상관없음";
         };
+    }
+
+    private GroupMember validateLeader(Principal principal, Long groupId) {
+        if (principal == null) {
+            throw new BusinessException(
+                    ErrorCode.UNAUTHORIZED_EXCEPTION,
+                    "로그인이 필요한 서비스입니다."
+            );
+        }
+
+        User user = entityFinderException.getUserFromPrincipal(principal);
+        Group group = entityFinderException.getGroupById(groupId);
+
+        // 1. 해당 그룹의 팀장인지 단독 확인
+        if (!group.getLeader().getId().equals(user.getId())) {
+            throw new BusinessException(
+                    ErrorCode.FORBIDDEN_EXCEPTION,
+                    "해당 그룹의 팀장만 접근할 수 있는 기능입니다."
+            );
+        }
+
+        // 2. 그룹의 팀장 GroupMember 조회
+        GroupMember groupMember = groupMemberRepository.findByGroupAndUser(group, user)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.GROUP_MEMBER_NOT_FOUND_EXCEPTION,
+                        ErrorCode.GROUP_MEMBER_NOT_FOUND_EXCEPTION.getMessage()
+                ));
+
+        // 3. MemberRole 2차 확인
+        if (groupMember.getMemberRole() != MemberRole.LEADER) {
+            throw new BusinessException(
+                    ErrorCode.FORBIDDEN_EXCEPTION,
+                    "해당 그룹의 팀장만 접근할 수 있는 기능입니다."
+            );
+        }
+
+        return groupMember;
     }
 }
