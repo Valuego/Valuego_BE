@@ -1,7 +1,6 @@
 package com.valuego.notification.application;
 
 import com.valuego.global.common.exception.EntityFinderException;
-
 import com.valuego.groups.entity.GroupMember;
 import com.valuego.notification.api.dto.response.NotificationResDto;
 import com.valuego.notification.domain.Notification;
@@ -66,14 +65,19 @@ public class NotificationService {
     // 알림 전체 목록 조회
     @Transactional(readOnly = true)
     public List<NotificationResDto> getNotificationList(Principal principal, String guestToken) {
+        // 1. Principal이 있고 실제 로그인 유저인 경우 회원 알림 조회
         if (principal != null) {
-            User user = entityFinderException.getUserFromPrincipal(principal);
-            return notificationRepository.findByUserIdOrderByNotificationCreatedAtDesc(user.getId())
-                    .stream()
-                    .map(NotificationResDto::from)
-                    .toList();
+            try {
+                User user = entityFinderException.getUserFromPrincipal(principal);
+                return notificationRepository.findByUserIdOrderByNotificationCreatedAtDesc(user.getId())
+                        .stream()
+                        .map(NotificationResDto::from)
+                        .toList();
+            } catch (Exception ignored) {
+            }
         }
 
+        // 2. 게스트 토큰 조회
         if (guestToken != null && !guestToken.isBlank()) {
             GroupMember guestMember = entityFinderException.getGroupMemberByGuestToken(guestToken);
             return notificationRepository.findByGuestGroupMemberIdOrderByNotificationCreatedAtDesc(guestMember.getId())
@@ -91,32 +95,38 @@ public class NotificationService {
         Notification notification = entityFinderException.getNotificationById(notificationId);
 
         if (principal != null) {
-            User user = entityFinderException.getUserFromPrincipal(principal);
-            if (notification.getUserId() == null || !notification.getUserId().equals(user.getId())) {
-                throw new SecurityException("본인의 알림만 조회할 수 있습니다.");
+            try {
+                User user = entityFinderException.getUserFromPrincipal(principal);
+                if (notification.getUserId() != null && notification.getUserId().equals(user.getId())) {
+                    notification.read();
+                    return NotificationResDto.from(notification);
+                }
+            } catch (Exception ignored) {
             }
         }
 
-        else if (guestToken != null && !guestToken.isBlank()) {
+        if (guestToken != null && !guestToken.isBlank()) {
             GroupMember guestMember = entityFinderException.getGroupMemberByGuestToken(guestToken);
-            if (notification.getGuestGroupMemberId() == null || !notification.getGuestGroupMemberId().equals(guestMember.getId())) {
-                throw new SecurityException("본인의 알림만 조회할 수 있습니다.");
+            if (notification.getGuestGroupMemberId() != null && notification.getGuestGroupMemberId().equals(guestMember.getId())) {
+                notification.read();
+                return NotificationResDto.from(notification);
             }
         }
-        else {
-            throw new SecurityException("인증 정보가 유효하지 않습니다.");
-        }
 
-        notification.read();
-        return NotificationResDto.from(notification);
+        throw new SecurityException("본인의 알림만 읽음 처리할 수 있거나 인증 정보가 유효하지 않습니다.");
     }
 
     // Emitter Key 추출 (회원: U_userId / 게스트: G_groupMemberId)
     private String getEmitterKey(Principal principal, String guestToken) {
         if (principal != null) {
-            User user = entityFinderException.getUserFromPrincipal(principal);
-            return "U_" + user.getId();
-        } else if (guestToken != null && !guestToken.isBlank()) {
+            try {
+                User user = entityFinderException.getUserFromPrincipal(principal);
+                return "U_" + user.getId();
+            } catch (Exception ignored) {
+            }
+        }
+
+        if (guestToken != null && !guestToken.isBlank()) {
             GroupMember guestMember = entityFinderException.getGroupMemberByGuestToken(guestToken);
             return "G_" + guestMember.getId();
         }
