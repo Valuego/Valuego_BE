@@ -7,6 +7,7 @@ import com.valuego.groups.api.dto.reqest.GroupGuestInfoReqDto;
 import com.valuego.groups.api.dto.response.GroupGuestJoinResDto;
 import com.valuego.groups.api.dto.response.GroupInfoResDto;
 import com.valuego.groups.api.dto.response.GroupListResDto;
+import com.valuego.groups.api.dto.response.GroupSummaryInfoResDto;
 import com.valuego.groups.service.GroupMemberService;
 import com.valuego.groups.service.GroupService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -57,5 +58,12 @@ public class GroupController {
     public ApiResTemplate<GroupInfoResDto> getDetailGroup(Principal principal, @RequestParam Long groupId) {
         GroupInfoResDto groupInfoResDto = groupService.getDetailGroup(principal, groupId);
         return ApiResTemplate.successResponse(SuccessCode.GET_SUCCESS, groupInfoResDto);
+    }
+
+    @Operation(summary = "그룹 정보 요약 조회", description = "비로그인 사용자에게 그룹 요약 정보를 보여줍니다.")
+    @GetMapping("/summary")
+    public ApiResTemplate<GroupSummaryInfoResDto> getSummaryGroup(@RequestParam String groupLink) {
+        GroupSummaryInfoResDto groupSummaryInfoResDto = groupService.getSummaryGroup(groupLink);
+        return ApiResTemplate.successResponse(SuccessCode.GET_SUCCESS, groupSummaryInfoResDto);
     }
 }
