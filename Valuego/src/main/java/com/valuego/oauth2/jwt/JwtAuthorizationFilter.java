@@ -10,13 +10,17 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -24,7 +28,6 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
 
-    // 모든 요청이 들어올 때 필터가 가로채 인증 로직 실행
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String uri = request.getRequestURI();
@@ -37,28 +40,31 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
                 return;
             }
 
-            String token = resolveToken(request);
+            boolean isAuthenticated = false;
 
-            if (StringUtils.hasText(token)) {
+            // 1. AccessToken 검사 (카카오 유저 쿠키 검사)
+            String accessToken = resolveToken(request);
+            if (StringUtils.hasText(accessToken)) {
                 try {
-                    if (jwtTokenProvider.validateToken(token)) {
-                        Authentication authentication =
-                                jwtTokenProvider.getAuthentication(token);
-
-                        SecurityContextHolder.getContext()
-                                .setAuthentication(authentication);
+                    if (jwtTokenProvider.validateToken(accessToken)) {
+                        Authentication authentication = jwtTokenProvider.getAuthentication(accessToken);
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                        isAuthenticated = true;
                     }
-                } catch (BusinessException e) {
-
-                    if (e.getErrorCode() == ErrorCode.JWT_EXPIRED) {
-                        setErrorResponse(response, ErrorCode.JWT_EXPIRED);
-                        return;
-                    }
-
-                    setErrorResponse(response, e.getErrorCode());
-                    return;
+                } catch (Exception ignored) {
                 }
             }
+
+            // 2. 카카오 로그인(AccessToken)이 없거나 유효하지 않은 경우 GuestAccessToken 검사
+            if (!isAuthenticated) {
+                String guestToken = resolveGuestToken(request);
+                if (StringUtils.hasText(guestToken)) {
+                    List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_GUEST"));
+                    Authentication guestAuthentication = new UsernamePasswordAuthenticationToken(guestToken, "", authorities);
+                    SecurityContextHolder.getContext().setAuthentication(guestAuthentication);
+                }
+            }
+
             filterChain.doFilter(request, response);
 
         } catch (BusinessException ex) {
@@ -66,17 +72,6 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         }
     }
 
-    private void setErrorResponse(HttpServletResponse response, ErrorCode errorCode) throws IOException {
-        response.setStatus(errorCode.getHttpStatusCode());
-        response.setContentType("application/json;charset=UTF-8");
-
-        ApiResTemplate<?> body = ApiResTemplate.errorResponse(errorCode, errorCode.getMessage());
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        response.getWriter().write(objectMapper.writeValueAsString(body));
-    }
-
-    // 요청에서 토큰 추출 메소드 -> 쿠키 추출로 변경
     private String resolveToken(HttpServletRequest request) {
         // 쿠키 추출
         Cookie[] cookies = request.getCookies();
@@ -90,5 +85,41 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         }
 
         return null;
+    }
+
+    // 헤더(Guest-Token), 쿼리파라미터(guestToken), 또는 쿠키(guestAccessToken) 추출
+    private String resolveGuestToken(HttpServletRequest request) {
+        // 1. Header 확인
+        String guestToken = request.getHeader("Guest-Token");
+        if (StringUtils.hasText(guestToken)) {
+            return guestToken;
+        }
+
+        // 2. Query Parameter 확인
+        guestToken = request.getParameter("guestToken");
+        if (StringUtils.hasText(guestToken)) {
+            return guestToken;
+        }
+
+        // 3. Cookie 확인 (guestAccessToken 명칭 적용)
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("guestAccessToken".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
+    }
+
+    private void setErrorResponse(HttpServletResponse response, ErrorCode errorCode) throws IOException {
+        response.setStatus(errorCode.getHttpStatusCode());
+        response.setContentType("application/json;charset=UTF-8");
+
+        ApiResTemplate<?> body = ApiResTemplate.errorResponse(errorCode, errorCode.getMessage());
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        response.getWriter().write(objectMapper.writeValueAsString(body));
     }
 }

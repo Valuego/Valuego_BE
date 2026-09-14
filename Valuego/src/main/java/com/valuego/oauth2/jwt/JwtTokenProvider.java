@@ -76,7 +76,6 @@ public class JwtTokenProvider {
                     .build()
                     .parseSignedClaims(token);
             return true;    // 검증 완료 -> 유효한 토큰
-            // 검증 실패 시 반환하는 예외에 따라 다르게 실행
         } catch (UnsupportedJwtException | MalformedJwtException e) {
             throw new BusinessException(ErrorCode.JWT_INVALID, "JWT 가 유효하지 않습니다.");
         } catch (SignatureException e) {
@@ -93,14 +92,14 @@ public class JwtTokenProvider {
     // 인증 객체 반환
     public Authentication getAuthentication(String token) {
         Claims claims = parseClaims(token);
-        Long userId = Long.parseLong(claims.getSubject());
-        User user = entityFinderException.getUserById(userId);
+        String userIdStr = claims.getSubject();
+        String socialType = claims.get(AUTHORITIES_KEY, String.class);
 
-        List<GrantedAuthority> authorities = List.of(
-                new SimpleGrantedAuthority(user.getSocialType().toString())
-        );
+        List<GrantedAuthority> authorities = (socialType != null)
+                ? List.of(new SimpleGrantedAuthority("ROLE_" + socialType))
+                : List.of(new SimpleGrantedAuthority("ROLE_USER"));
 
-        return new UsernamePasswordAuthenticationToken(user.getId(), "", authorities);
+        return new UsernamePasswordAuthenticationToken(Long.parseLong(userIdStr), "", authorities);
     }
 
     private Claims parseClaims(String accessToken) {

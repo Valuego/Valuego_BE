@@ -1,6 +1,7 @@
 package com.valuego.comment.entity;
 
 import com.valuego.global.common.template.BaseTimeEntity;
+import com.valuego.groups.entity.GroupMember;
 import com.valuego.travel.entity.TravelPlace;
 import com.valuego.users.entity.User;
 import jakarta.persistence.*;
@@ -23,16 +24,21 @@ public class Comment extends BaseTimeEntity {
     private TravelPlace travelPlace;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = true)
     private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_member_id")
+    private GroupMember groupMember;
 
     @Column(nullable = false, length = 500)
     private String content;
 
     @Builder
-    public Comment(TravelPlace travelPlace, User user, String content) {
+    public Comment(TravelPlace travelPlace, User user, GroupMember groupMember, String content) {
         this.travelPlace = travelPlace;
         this.user = user;
+        this.groupMember = groupMember;
         this.content = content;
     }
 }
