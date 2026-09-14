@@ -3,6 +3,7 @@ package com.valuego.styles.api;
 import com.valuego.global.common.code.SuccessCode;
 import com.valuego.global.common.template.ApiResTemplate;
 import com.valuego.styles.api.dto.request.StyleReqDto;
+import com.valuego.styles.api.dto.response.MyStyleCardResDto;
 import com.valuego.styles.api.dto.response.StyleInfoResDto;
 import com.valuego.styles.service.StyleService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,5 +37,14 @@ public class StyleController {
                                                             @Valid @RequestBody StyleReqDto styleReqDto) {
         StyleInfoResDto styleInfoResDto = styleService.createGuestStyle(guestToken, styleReqDto);
         return ApiResTemplate.successResponse(SuccessCode.CREATE_SUCCESS, styleInfoResDto);
+    }
+
+    @Operation(summary = "팀장 내 성향 카드 조회", description = "팀장 개인의 여행 스타일을 분석하여 내 성향 카드를 조회합니다.")
+    @GetMapping
+    public ApiResTemplate<MyStyleCardResDto> getLeaderStyleCard(@RequestParam Long groupId,
+                                                                Principal principal,
+                                                                @CookieValue(value = "guestAccessToken", required = false) String guestToken) {
+        MyStyleCardResDto myStyleCardResDto = styleService.getLeaderStyleCard(groupId, principal, guestToken);
+        return ApiResTemplate.successResponse(SuccessCode.GET_SUCCESS, myStyleCardResDto);
     }
 }
