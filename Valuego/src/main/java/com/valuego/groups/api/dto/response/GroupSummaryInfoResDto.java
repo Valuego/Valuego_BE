@@ -5,6 +5,7 @@ import com.valuego.groups.entity.Group;
 import lombok.Builder;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 @Builder
 public record GroupSummaryInfoResDto(
@@ -15,6 +16,12 @@ public record GroupSummaryInfoResDto(
         LocalDateTime endDate,
         int memberCount
 ) {
+    public String getDuration() {
+        if (startDate == null || endDate == null) return "";
+        long nights = ChronoUnit.DAYS.between(startDate.toLocalDate(), endDate.toLocalDate());
+        return String.format("%d박 %d일", nights, nights + 1);
+    }
+
     public static GroupSummaryInfoResDto from(Group group) {
         return GroupSummaryInfoResDto.builder()
                 .inviterName(group.getLeader().getNickname())

@@ -143,8 +143,8 @@ public class GroupService {
     }
 
     // 그룹 요약 정보 조회
-    public GroupSummaryInfoResDto getSummaryGroup(Long groupId) {
-        Group group = entityFinderException.getGroupById(groupId);
+    public GroupSummaryInfoResDto getSummaryGroup(String groupLink) {
+        Group group = entityFinderException.getGroupByGroupLink(groupLink);
         return GroupSummaryInfoResDto.from(group);
     }
 }

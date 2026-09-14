@@ -62,8 +62,8 @@ public class GroupController {
 
     @Operation(summary = "그룹 정보 요약 조회", description = "비로그인 사용자에게 그룹 요약 정보를 보여줍니다.")
     @GetMapping("/summary")
-    public ApiResTemplate<GroupSummaryInfoResDto> getSummaryGroup(@RequestParam Long groupId) {
-        GroupSummaryInfoResDto groupSummaryInfoResDto = groupService.getSummaryGroup(groupId);
+    public ApiResTemplate<GroupSummaryInfoResDto> getSummaryGroup(@RequestParam String groupLink) {
+        GroupSummaryInfoResDto groupSummaryInfoResDto = groupService.getSummaryGroup(groupLink);
         return ApiResTemplate.successResponse(SuccessCode.GET_SUCCESS, groupSummaryInfoResDto);
     }
 }
