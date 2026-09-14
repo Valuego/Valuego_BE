@@ -22,9 +22,9 @@ public class NotificationEventListener {
 
         for (GroupMember member : groupMembers) {
             if (member.getUser() != null) {
-                notificationService.createNotificationForUser(member.getUser().getId(), event.type(), event.targetId());
+                notificationService.createNotificationForUser(member.getUser().getId(), event.type(), event.targetId(), event.groupTitle());
             } else {
-                notificationService.createNotificationForGuest(member.getId(), event.type(), event.targetId());
+                notificationService.createNotificationForGuest(member.getId(), event.type(), event.targetId(), event.groupTitle());
             }
         }
     }

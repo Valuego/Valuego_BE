@@ -63,7 +63,10 @@ public class EffortService {
                     .toList();
 
             eventPublisher.publishEvent(
-                    new NotificationEvent(targetGroupMemberIds, NotificationType.RETROSPECT_COMPLETE, group.getId())
+                    new NotificationEvent(targetGroupMemberIds,
+                            NotificationType.RETROSPECT_COMPLETE,
+                            group.getId(),
+                            group.getTitle())
             );
         }
 

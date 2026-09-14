@@ -90,7 +90,10 @@ public class GroupMemberService {
                     .toList();
 
             eventPublisher.publishEvent(
-                    new NotificationEvent(targetGroupMemberIds, NotificationType.GROUP_JOIN_COMPLETE, group.getId())
+                    new NotificationEvent(targetGroupMemberIds,
+                            NotificationType.GROUP_JOIN_COMPLETE,
+                            group.getId(),
+                            group.getTitle())
             );
         }
 

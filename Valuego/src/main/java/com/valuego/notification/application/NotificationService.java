@@ -33,11 +33,11 @@ public class NotificationService {
 
     // 회원용 알림 생성 및 SSE 전송
     @Transactional
-    public void createNotificationForUser(Long userId, NotificationType type, Long groupId) {
+    public void createNotificationForUser(Long userId, NotificationType type, Long groupId, String groupTitle) {
         Notification notification = Notification.builder()
                 .userId(userId)
                 .type(type)
-                .title(type.getDefaultTitle())
+                .title(type.generateTitle(groupTitle))
                 .content(type.getDefaultContent())
                 .groupId(groupId)
                 .isRead(false)
@@ -49,11 +49,11 @@ public class NotificationService {
 
     // 게스트용 알림 생성 및 SSE 전송
     @Transactional
-    public void createNotificationForGuest(Long guestGroupMemberId, NotificationType type, Long groupId) {
+    public void createNotificationForGuest(Long guestGroupMemberId, NotificationType type, Long groupId, String groupTitle) {
         Notification notification = Notification.builder()
                 .guestGroupMemberId(guestGroupMemberId)
                 .type(type)
-                .title(type.getDefaultTitle())
+                .title(type.generateTitle(groupTitle))
                 .content(type.getDefaultContent())
                 .groupId(groupId)
                 .isRead(false)

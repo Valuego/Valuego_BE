@@ -7,5 +7,6 @@ import java.util.List;
 public record NotificationEvent(
         List<Long> targetGroupMemberIds,
         NotificationType type,
-        Long targetId
+        Long targetId,
+        String groupTitle
 ) {}
