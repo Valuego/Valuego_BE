@@ -113,15 +113,29 @@ public class StyleService {
 
 
     // 팀장 성향 그룹별 조회
-    @Transactional(readOnly = true)
+    @Transactional
     public MyStyleCardResDto getLeaderStyleCard(Long groupId, Principal principal) {
         GroupMember member = validateLeader(principal, groupId);
 
         Style style = styleRepository.findByGroupMember(member)
                 .orElseThrow(() -> new BusinessException(ErrorCode.STYLE_NOT_FOUND_EXCEPTION
-                        , ErrorCode.STYLE_ALREADY_EXISTS.getMessage()));
+                        , ErrorCode.STYLE_NOT_FOUND_EXCEPTION.getMessage()));
 
-        StyleAiResDto styleAiResDto = styleGeminiService.analyzeLeaderStyle(style);
+        // 최초 1회만 gemini 호출
+        if (style.getDnaTitle() == null || style.getDnaTitle().isBlank()) {
+            StyleAiResDto styleAiResDto = styleGeminiService.analyzeLeaderStyle(style);
+
+            String tagsString = String.join(",", styleAiResDto.tags());
+            style.updateAiAnalysis(
+                    styleAiResDto.dnaTitle(),
+                    styleAiResDto.dnaDescription(),
+                    tagsString
+            );
+        }
+
+        List<String> tagsList = style.getTags() != null && !style.getTags().isBlank()
+                ? List.of(style.getTags().split(","))
+                : List.of();
 
         String activityText = getActivityText(style.getActivityIntensity());
         String budgetText = getBudgetText(style.getBudgetType());
@@ -131,9 +145,9 @@ public class StyleService {
                 style.getId(),
                 groupId,
                 member.getId(),
-                styleAiResDto.dnaTitle(),
-                styleAiResDto.dnaDescription(),
-                styleAiResDto.tags(),
+                style.getDnaTitle(),
+                style.getDnaDescription(),
+                tagsList,
                 activityText,
                 budgetText,
                 foodText,
