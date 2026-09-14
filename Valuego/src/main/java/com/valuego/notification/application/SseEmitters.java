@@ -16,9 +16,9 @@ public class SseEmitters {
     public SseEmitter addEmitter(String emitterKey, SseEmitter emitter) {
         emitters.put(emitterKey, emitter);
 
-        emitter.onCompletion(() -> emitters.remove(emitterKey));
-        emitter.onTimeout(() -> emitters.remove(emitterKey));
-        emitter.onError((e) -> emitters.remove(emitterKey));
+        emitter.onCompletion(() -> emitters.remove(emitterKey, emitter));
+        emitter.onTimeout(() -> emitters.remove(emitterKey, emitter));
+        emitter.onError((e) -> emitters.remove(emitterKey, emitter));
 
         try {
             emitter.send(SseEmitter.event().name("connect").data("connected"));

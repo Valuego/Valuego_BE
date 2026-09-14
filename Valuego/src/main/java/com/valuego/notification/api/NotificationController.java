@@ -22,10 +22,10 @@ public class NotificationController {
 
     @Operation(summary = "SSE 구독", description = "SSE 구독 생성, 로딩중 화면이 정상입니다." )
     @GetMapping(value = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public ApiResTemplate<SseEmitter> subscribe(Principal principal,
+    public SseEmitter subscribe(Principal principal,
                                                 @CookieValue(name = "guestAccessToken", required = false) String guestToken) {
         SseEmitter emitter = notificationService.subscribe(principal, guestToken);
-        return ApiResTemplate.successResponse(SuccessCode.SUCCESS, emitter);
+        return emitter;
     }
 
     @Operation(summary = "알림 전체 목록 조회", description = "사용자가 알림 전체 리스트를 조회합니다.")

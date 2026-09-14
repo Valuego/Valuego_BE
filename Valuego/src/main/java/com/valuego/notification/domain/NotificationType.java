@@ -21,14 +21,4 @@ public enum NotificationType {
         }
         return String.format(this.defaultTitle, args);
     }
-
-    /**
-     * 필요시 내용(Content)에도 동적 인자를 넣을 수 있도록 메서드 추가
-     */
-    public String generateContent(Object... args) {
-        if (args == null || args.length == 0) {
-            return this.defaultContent;
-        }
-        return String.format(this.defaultContent, args);
-    }
 }
