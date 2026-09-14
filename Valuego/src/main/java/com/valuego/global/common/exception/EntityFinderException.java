@@ -44,10 +44,20 @@ public class EntityFinderException {
     private final NotificationRepository notificationRepository;
 
     public User getUserFromPrincipal(Principal principal) {
-        Long id = Long.parseLong(principal.getName());
-        return userRepository.findById(id)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND_EXCEPTION,
-                        ErrorCode.USER_NOT_FOUND_EXCEPTION.getMessage() + id));
+        if (principal == null) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_EXCEPTION
+                    , ErrorCode.UNAUTHORIZED_EXCEPTION.getMessage());
+        }
+
+        try {
+            Long userId = Long.parseLong(principal.getName());
+            return userRepository.findById(userId)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND_EXCEPTION
+                            , ErrorCode.USER_NOT_FOUND_EXCEPTION.getMessage()));
+        } catch (NumberFormatException e) {
+            throw new BusinessException(ErrorCode.FORBIDDEN_EXCEPTION
+                    , "팀장(카카오 로그인 사용자)만 접근할 수 있는 기능입니다.");
+        }
     }
 
     public User getUserById(Long userId) {

@@ -3,6 +3,7 @@ package com.valuego.groups.service;
 import com.valuego.global.common.code.ErrorCode;
 import com.valuego.global.common.exception.BusinessException;
 import com.valuego.global.common.exception.EntityFinderException;
+import com.valuego.global.common.exception.ValidMemberException;
 import com.valuego.groups.api.dto.reqest.GroupCreateReqDto;
 import com.valuego.groups.api.dto.response.GroupInfoResDto;
 import com.valuego.groups.api.dto.response.GroupListResDto;
@@ -34,6 +35,7 @@ public class GroupService {
     private final GroupRepository groupRepository;
     private final GroupMemberRepository groupMemberRepository;
     private final EntityFinderException entityFinderException;
+    private final ValidMemberException validMemberException;
 
     // 그룹 생성
     @Transactional
@@ -74,17 +76,10 @@ public class GroupService {
         return GroupInfoResDto.from(group, groupMembers);
     }
 
-    // 그룹 상세 조회 - 팀장만
-    public GroupInfoResDto getDetailGroup(Principal principal, Long groupId) {
-        User user = entityFinderException.getUserFromPrincipal(principal);
+    // 그룹 상세 조회
+    public GroupInfoResDto getDetailGroup(Principal principal, String guestToken, Long groupId) {
         Group group = entityFinderException.getGroupById(groupId);
-
-        // 팀장 여부 확인
-        if (!group.getLeader().getId().equals(user.getId())) {
-            throw new BusinessException(ErrorCode.FORBIDDEN_EXCEPTION,
-                    "팀장만 그룹 상세 정보를 조회할 수 있습니다."
-            );
-        }
+        validMemberException.validateGroupMember(principal, guestToken, group);
 
         // 그룹 멤버 조회
         List<GroupMember> groupMembers = groupMemberRepository.findAllByGroup(group);
