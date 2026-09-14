@@ -8,6 +8,7 @@ import com.valuego.comment.entity.repository.CommentRepository;
 import com.valuego.global.common.exception.EntityFinderException;
 import com.valuego.global.common.exception.ValidMemberException;
 import com.valuego.groups.entity.Group;
+import com.valuego.groups.entity.GroupMember;
 import com.valuego.travel.entity.TravelPlace;
 import com.valuego.travel.entity.repository.TravelPlaceRepository;
 import com.valuego.users.entity.User;
@@ -48,12 +49,20 @@ public class CommentService {
         TravelPlace travelPlace = entityFinderException.getTravelPlaceById(travelPlaceId);
 
         Group group = travelPlace.getGroup();
-        validMemberException.validateGroupMember(principal, guestToken, group);
+        GroupMember groupMember = validMemberException.validateGroupMember(principal, guestToken, group);
 
-        User user = entityFinderException.getUserFromPrincipal(principal);
+        User user = null;
+
+        try {
+            if (principal != null) {
+                user = entityFinderException.getUserFromPrincipal(principal);
+            }
+        } catch (Exception ignored) {
+        }
 
         Comment comment = Comment.builder()
                 .user(user)
+                .groupMember(groupMember)
                 .travelPlace(travelPlace)
                 .content(commentCreateReqDto.content())
                 .build();
