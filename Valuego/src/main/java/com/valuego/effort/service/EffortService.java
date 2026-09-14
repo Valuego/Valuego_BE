@@ -11,7 +11,11 @@ import com.valuego.global.common.exception.EntityFinderException;
 import com.valuego.global.common.exception.ValidMemberException;
 import com.valuego.groups.entity.Group;
 import com.valuego.groups.entity.GroupMember;
+import com.valuego.groups.entity.repository.GroupMemberRepository;
+import com.valuego.notification.api.dto.response.NotificationEvent;
+import com.valuego.notification.domain.NotificationType;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +31,8 @@ public class EffortService {
     private final EffortItemRepository effortItemRepository;
     private final EntityFinderException entityFinderException;
     private final ValidMemberException validMemberException;
+    private final GroupMemberRepository groupMemberRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     // 수고 회고 생성
     @Transactional
@@ -48,6 +54,22 @@ public class EffortService {
                 .build();
 
         Effort savedEffort = effortRepository.save(effort);
+
+        if (isAllMembersCompletedRetrospect(group)) {
+            List<GroupMember> groupMembers = groupMemberRepository.findAllByGroup(group);
+
+            List<Long> targetGroupMemberIds = groupMembers.stream()
+                    .map(GroupMember::getId)
+                    .toList();
+
+            eventPublisher.publishEvent(
+                    new NotificationEvent(targetGroupMemberIds,
+                            NotificationType.RETROSPECT_COMPLETE,
+                            group.getId(),
+                            group.getTitle())
+            );
+        }
+
         return EffortInfoResDto.from(savedEffort);
     }
 
@@ -92,5 +114,12 @@ public class EffortService {
                 .orElse(0.0);
 
         return Math.round(average / 100.0) * 100;
+    }
+
+    // 알림 발송을 위한 검증
+    private boolean isAllMembersCompletedRetrospect(Group group) {
+        List<GroupMember> allMembers = groupMemberRepository.findAllByGroup(group);
+        long countOfWriters = effortRepository.countDistinctWriterMemberByGroup(group);
+        return allMembers.size() == countOfWriters;
     }
 }

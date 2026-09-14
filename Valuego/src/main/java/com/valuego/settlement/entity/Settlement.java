@@ -1,35 +1,47 @@
 package com.valuego.settlement.entity;
 
 import com.valuego.groups.entity.Group;
-import com.valuego.users.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
-@Table(name = "settlements")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
+@Builder
 public class Settlement {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "settlement_id")
     private Long id;
 
-    private Boolean isApproved;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "group_id", nullable = false)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_id", nullable = false, unique = true)
     private Group group;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @Column(nullable = false)
+    private Long totalExpense;
 
-    @Builder
-    public Settlement(Boolean isApproved, Group group, User user) {
-        this.isApproved = isApproved;
-        this.group = group;
-        this.user = user;
+    @Column(nullable = false)
+    private Long expensePerMember;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean isConfirmed = false;
+
+    private LocalDateTime confirmedAt;
+
+    public boolean getIsConfirmed() {
+        return this.isConfirmed;
+    }
+
+    public void confirmSettlement(Long totalExpense, Long expensePerMember) {
+        this.totalExpense = totalExpense;
+        this.expensePerMember = expensePerMember;
+        this.isConfirmed = true;
+        this.confirmedAt = LocalDateTime.now();
     }
 }
