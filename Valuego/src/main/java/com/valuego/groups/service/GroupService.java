@@ -6,6 +6,7 @@ import com.valuego.global.common.exception.EntityFinderException;
 import com.valuego.groups.api.dto.reqest.GroupCreateReqDto;
 import com.valuego.groups.api.dto.response.GroupInfoResDto;
 import com.valuego.groups.api.dto.response.GroupListResDto;
+import com.valuego.groups.api.dto.response.GroupSummaryInfoResDto;
 import com.valuego.groups.entity.Enum.GroupStatus;
 import com.valuego.groups.entity.Group;
 import com.valuego.groups.entity.GroupMember;
@@ -139,5 +140,11 @@ public class GroupService {
         }
 
         return group;
+    }
+
+    // 그룹 요약 정보 조회
+    public GroupSummaryInfoResDto getSummaryGroup(Long groupId) {
+        Group group = entityFinderException.getGroupById(groupId);
+        return GroupSummaryInfoResDto.from(group);
     }
 }
