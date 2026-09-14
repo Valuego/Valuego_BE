@@ -50,15 +50,7 @@ public class CommentService {
 
         Group group = travelPlace.getGroup();
         GroupMember groupMember = validMemberException.validateGroupMember(principal, guestToken, group);
-
-        User user = null;
-
-        try {
-            if (principal != null) {
-                user = entityFinderException.getUserFromPrincipal(principal);
-            }
-        } catch (Exception ignored) {
-        }
+        User user = groupMember.getUser();
 
         Comment comment = Comment.builder()
                 .user(user)
