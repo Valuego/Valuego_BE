@@ -145,4 +145,32 @@ public class TourApiService {
             case JEONJU -> "110";
         };
     }
+
+    // 일별 장소 호출
+    public List<TourPlace> getPlacesDetails(List<String> contentIds) {
+        if (contentIds == null || contentIds.isEmpty()) {
+            return List.of();
+        }
+
+        // 비동기 병렬 호출로 TourAPI 요청 속도 최적화
+        List<java.util.concurrent.CompletableFuture<TourPlace>> futures = contentIds.stream()
+                .filter(id -> id != null && !id.isBlank())
+                .map(id -> java.util.concurrent.CompletableFuture.supplyAsync(() -> getPlaceDetail(id)))
+                .toList();
+
+        return futures.stream()
+                .map(java.util.concurrent.CompletableFuture::join)
+                .filter(java.util.Objects::nonNull)
+                .toList();
+    }
+
+    public java.util.Map<String, TourPlace> getPlacesDetailsMap(List<String> contentIds) {
+        List<TourPlace> places = getPlacesDetails(contentIds);
+        return places.stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        TourPlace::getContentId,
+                        place -> place,
+                        (existing, replacement) -> existing
+                ));
+    }
 }

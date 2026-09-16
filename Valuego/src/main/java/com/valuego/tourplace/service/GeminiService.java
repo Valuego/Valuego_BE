@@ -70,6 +70,9 @@ public class GeminiService {
                 [여행 목적지]
                 %s
                 
+                [여행 총 기간]
+                총 %d일간의 일정 (Day 1부터 Day %d까지 반드시 생성해야 합니다.) 
+               
                 [여행 그룹 성향]
                 %s
                 
@@ -81,11 +84,12 @@ public class GeminiService {
                 
                 [요구사항]
                 1. 반드시 위에 제공된 후보 장소들의 'contentId' 값 중 **존재하는 정확한 값**만 골라서 사용하세요. 임의로 숫자를 지어내거나(예: "1"), 성향 정보를 contentId에 넣는 행위를 절대 금지합니다.
-                2. 하루당 오전/오후 활동 2~3곳, 점심/저녁 식당 2곳 정도로 적절히 배치하세요. 
-                3. 하루당 각 활동의 위치를 고려하여 최적의 동선으로 구성하세요.
-                4. 모든 후보 장소의 latitude(위도)와 longitude(경도)를 분석하여 연속된 장소 간의 이동 거리가 최소화되도록 배치하세요.
-                5. 반드시 아래 JSON 형식으로만 응답하세요. 마크다운(```json) 없이 순수 JSON만 반환해야 합니다.
-                6. 제공된 후보 장소 리스트를 광범위하게 활용하여, 매번 동일한 유명 명소만 반복해서 뽑지 말고 다양한 테마와 숨은 명소를 포함한 독창적인 동선을 구성해 주세요.
+                2. 반드시 Day 1부터 Day %d까지 총 %d일치 일정을 하루도 빠짐없이 모두 생성하세요.
+                3. 하루당 오전/오후 활동 2~3곳, 점심/저녁 식당 2곳 정도로 적절히 배치하세요. 
+                4. 하루당 각 활동의 위치를 고려하여 최적의 동선으로 구성하세요.
+                5. 모든 후보 장소의 latitude(위도)와 longitude(경도)를 분석하여 연속된 장소 간의 이동 거리가 최소화되도록 배치하세요.
+                6. 반드시 아래 JSON 형식으로만 응답하세요. 마크다운(```json) 없이 순수 JSON만 반환해야 합니다.
+                7. 제공된 후보 장소 리스트를 광범위하게 활용하여, 매번 동일한 유명 명소만 반복해서 뽑지 말고 다양한 테마와 숨은 명소를 포함한 독창적인 동선을 구성해 주세요.
                 
                 [응답 JSON 스키마]
                 {
@@ -103,7 +107,7 @@ public class GeminiService {
                     }
                   ]
                 }
-                """, destination.name(), stylesJson, activitiesJson, restaurantsJson);
+                """, destination.name(), days, days, stylesJson, activitiesJson, restaurantsJson, days, days);
 
         return callGeminiApi(prompt);
     }

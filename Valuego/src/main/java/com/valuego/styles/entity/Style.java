@@ -33,10 +33,20 @@ public class Style {
     @Column(nullable = false)
     private Integer activityIntensity;
 
+    private String dnaTitle;
+    private String dnaDescription;
+    private String tags;
+
     public Style(GroupMember groupMember, BudgetType budgetType, FoodType foodType, Integer activityIntensity) {
         this.groupMember = groupMember;
         this.budgetType = budgetType;
         this.foodType = foodType;
         this.activityIntensity = activityIntensity;
+    }
+
+    public void updateAiAnalysis(String dnaTitle, String dnaDescription, String tags) {
+        this.dnaTitle = dnaTitle;
+        this.dnaDescription = dnaDescription;
+        this.tags = tags;
     }
 }
