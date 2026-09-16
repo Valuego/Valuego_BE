@@ -3,6 +3,8 @@ package com.valuego.styles.api;
 import com.valuego.global.common.code.SuccessCode;
 import com.valuego.global.common.template.ApiResTemplate;
 import com.valuego.styles.api.dto.request.StyleReqDto;
+import com.valuego.styles.api.dto.response.MyStyleCardResDto;
+import com.valuego.styles.api.dto.response.StyleGroupListResDto;
 import com.valuego.styles.api.dto.response.StyleInfoResDto;
 import com.valuego.styles.service.StyleService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -36,5 +39,20 @@ public class StyleController {
                                                             @Valid @RequestBody StyleReqDto styleReqDto) {
         StyleInfoResDto styleInfoResDto = styleService.createGuestStyle(guestToken, styleReqDto);
         return ApiResTemplate.successResponse(SuccessCode.CREATE_SUCCESS, styleInfoResDto);
+    }
+
+    @Operation(summary = "팀장 내 성향 카드 조회", description = "팀장 개인의 여행 스타일을 분석하여 내 성향 카드를 조회합니다.")
+    @GetMapping
+    public ApiResTemplate<MyStyleCardResDto> getLeaderStyleCard(@RequestParam Long groupId,
+                                                                Principal principal) {
+        MyStyleCardResDto myStyleCardResDto = styleService.getLeaderStyleCard(groupId, principal);
+        return ApiResTemplate.successResponse(SuccessCode.GET_SUCCESS, myStyleCardResDto);
+    }
+
+    @Operation(summary = "팀장 그룹 정보 리스트 조회", description = "팀장이 생성했거나 속해있는 전체 그룹 요약 목록(groupId, title, startDate, endDate)을 조회합니다.")
+    @GetMapping("/groups")
+    public ApiResTemplate<List<StyleGroupListResDto>> getLeaderGroupList(Principal principal) {
+        List<StyleGroupListResDto> groupList = styleService.getLeaderGroupList(principal);
+        return ApiResTemplate.successResponse(SuccessCode.GET_SUCCESS, groupList);
     }
 }
