@@ -20,4 +20,14 @@ public interface TravelPlaceRepository extends JpaRepository<TravelPlace, Long> 
             "WHERE tp.group.id = :groupId AND td.dayNumber = :dayNumber " +
             "ORDER BY tp.visitTime ASC, tp.scheduleOrder ASC")
     List<TravelPlace> findAllByGroupIdAndDayNumber(@Param("groupId") Long groupId, @Param("dayNumber") Integer dayNumber);
+
+    @Query("SELECT tp FROM TravelPlace tp " +
+            "JOIN tp.travelDay td " +
+            "WHERE tp.group.id = :groupId AND td.dayNumber = :dayNumber AND tp.visitTime >= :nowTime " +
+            "ORDER BY tp.visitTime ASC, tp.scheduleOrder ASC")
+    List<TravelPlace> findRemainingPlacesByGroupIdAndDayNumber(
+            @Param("groupId") Long groupId,
+            @Param("dayNumber") Integer dayNumber,
+            @Param("nowTime") LocalTime nowTime
+    );
 }

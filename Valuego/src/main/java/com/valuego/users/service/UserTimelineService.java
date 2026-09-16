@@ -14,6 +14,7 @@ import com.valuego.tourplace.api.dto.response.TourPlace;
 import com.valuego.tourplace.service.TourApiService;
 import com.valuego.travel.entity.TravelPlace;
 import com.valuego.travel.entity.repository.TravelPlaceRepository;
+import com.valuego.users.api.dto.response.UserScheduleResDto;
 import com.valuego.users.api.dto.response.UserTimelineResDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ import java.security.Principal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -138,5 +140,45 @@ public class UserTimelineService {
                 .totalExpense(totalExpense)
                 .items(items)
                 .build();
+    }
+
+    // 남은 일정 조회
+    public UserScheduleResDto getRemainingSchedule(Principal principal, Long groupId, String guestToken) {
+        Group group = entityFinderException.getGroupById(groupId);
+        validMemberException.validateGroupMember(principal, guestToken, group);
+
+        LocalDateTime startDate = group.getStartDate();
+        LocalDate today = LocalDate.now();
+        LocalTime nowTime = LocalTime.now();
+
+        int currentDay = (int) ChronoUnit.DAYS.between(startDate.toLocalDate(), today) + 1;
+        if (currentDay < 1) currentDay = 1;
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("M.d E · a h시 m분", Locale.KOREAN);
+        String currentStatus = LocalDateTime.now().format(formatter);
+
+        LocalDate targetDate = startDate.toLocalDate().plusDays(currentDay - 1);
+        BigDecimal totalExpenseBigDecimal = expenseRepository.findTotalAmountByGroupIdAndExpenseDate(groupId, targetDate);
+        int totalExpense = totalExpenseBigDecimal != null ? totalExpenseBigDecimal.intValue() : 0;
+
+        // 오늘 남은 장소 조회 (현재 시간 이후, 최대 3개)
+        List<TravelPlace> top3Places = travelPlaceRepository
+                .findRemainingPlacesByGroupIdAndDayNumber(groupId, currentDay, nowTime)
+                .stream()
+                .limit(3)
+                .toList();
+
+        List<String> contentIds = top3Places.stream()
+                .map(TravelPlace::getContentId)
+                .filter(Objects::nonNull)
+                .toList();
+
+        Map<String, TourPlace> tourPlaceMap = tourApiService.getPlacesDetailsMap(contentIds);
+
+        List<UserScheduleResDto.RemainingScheduleResDto> todaySchedules = top3Places.stream()
+                .map(place -> UserScheduleResDto.RemainingScheduleResDto.from(place, today, tourPlaceMap))
+                .toList();
+
+        return UserScheduleResDto.of(group, currentDay, currentStatus, totalExpense, todaySchedules);
     }
 }
