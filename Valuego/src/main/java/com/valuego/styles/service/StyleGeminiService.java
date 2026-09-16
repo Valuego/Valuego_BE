@@ -27,7 +27,7 @@ public class StyleGeminiService {
     private final RestTemplate template;
     private final ObjectMapper objectMapper;
 
-    @Value("${gemini.model:gemini-1.5-flash}")
+    @Value("${gemini.model}")
     private String model;
 
     public StyleAiResDto analyzeLeaderStyle(Style style) {

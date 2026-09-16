@@ -148,11 +148,15 @@ public class UserTimelineService {
         validMemberException.validateGroupMember(principal, guestToken, group);
 
         LocalDateTime startDate = group.getStartDate();
+        LocalDateTime endDate = group.getEndDate();
         LocalDate today = LocalDate.now();
         LocalTime nowTime = LocalTime.now();
 
         int currentDay = (int) ChronoUnit.DAYS.between(startDate.toLocalDate(), today) + 1;
         if (currentDay < 1) currentDay = 1;
+        if (endDate != null && today.isAfter(endDate.toLocalDate())) {
+            throw new BusinessException(ErrorCode.TRAVEL_DAY_NOT_FOUND_EXCEPTION, "이미 종료된 여행입니다.");
+        }
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("M.d E · a h시 m분", Locale.KOREAN);
         String currentStatus = LocalDateTime.now().format(formatter);
