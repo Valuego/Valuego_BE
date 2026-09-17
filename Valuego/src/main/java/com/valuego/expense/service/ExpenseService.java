@@ -50,6 +50,7 @@ public class ExpenseService {
                 ExpensePayer payer = ExpensePayer.builder()
                         .expense(expense)
                         .groupMember(groupMember)
+                        .paidAmount(expenseReqDto.amount())
                         .build();
 
                 expense.getExpensePayers().add(payer);
