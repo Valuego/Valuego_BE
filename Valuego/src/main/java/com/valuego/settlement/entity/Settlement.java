@@ -5,12 +5,15 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
+@Table(name = "settlements")
 public class Settlement {
 
     @Id
@@ -34,14 +37,25 @@ public class Settlement {
 
     private LocalDateTime confirmedAt;
 
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "settlement_confirmed_members", joinColumns = @JoinColumn(name = "settlement_id"))
+    @Column(name = "group_member_id")
+    @Builder.Default
+    private Set<Long> confirmedMemberIds = new HashSet<>();
+
     public boolean getIsConfirmed() {
         return this.isConfirmed;
     }
 
-    public void confirmSettlement(Long totalExpense, Long expensePerMember) {
+    public void confirmMember(Long groupMemberId, int totalMemberCount, Long totalExpense, Long expensePerMember) {
         this.totalExpense = totalExpense;
         this.expensePerMember = expensePerMember;
-        this.isConfirmed = true;
-        this.confirmedAt = LocalDateTime.now();
+        this.confirmedMemberIds.add(groupMemberId);
+
+        // 그룹 전체 멤버가 모두 확인을 누르면 전원 확인 완료(isConfirmed = true)
+        if (this.confirmedMemberIds.size() >= totalMemberCount) {
+            this.isConfirmed = true;
+            this.confirmedAt = LocalDateTime.now();
+        }
     }
 }

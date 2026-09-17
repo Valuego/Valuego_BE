@@ -172,4 +172,31 @@ public class SettlementService {
                 memberSettlements
         );
     }
+
+    @Transactional
+    public void confirmSettlement(Principal principal, Long groupId, String guestToken) {
+        Group group = entityFinderException.getGroupById(groupId);
+        GroupMember currentMember = validMemberException.validateGroupMember(principal, guestToken, group);
+
+        List<Expense> expenses = expenseRepository.findByGroupId(groupId);
+        long totalExpense = expenses.stream()
+                .map(Expense::getAmount)
+                .filter(Objects::nonNull)
+                .mapToLong(BigDecimal::longValue)
+                .sum();
+
+        int memberCount = group.getGroupMembers().size();
+        long expensePerMember = memberCount > 0 ? totalExpense / memberCount : 0L;
+
+        Settlement settlement = settlementRepository.findByGroupId(groupId)
+                .orElseGet(() -> Settlement.builder()
+                        .group(group)
+                        .totalExpense(totalExpense)
+                        .expensePerMember(expensePerMember)
+                        .build());
+
+        // 해당 멤버의 확인 도장 등록 (모든 멤버 수 달성 시 isConfirmed = true 변환)
+        settlement.confirmMember(currentMember.getId(), memberCount, totalExpense, expensePerMember);
+        settlementRepository.save(settlement);
+    }
 }
