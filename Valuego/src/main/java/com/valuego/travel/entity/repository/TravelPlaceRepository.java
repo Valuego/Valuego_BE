@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -30,4 +31,7 @@ public interface TravelPlaceRepository extends JpaRepository<TravelPlace, Long> 
             @Param("dayNumber") Integer dayNumber,
             @Param("nowTime") LocalTime nowTime
     );
+
+    @Query("SELECT SUM(tp.distanceFromPreviousKm) FROM TravelPlace tp WHERE tp.group.id = :groupId")
+    BigDecimal sumDistanceFromPreviousKmByGroupId(@Param("groupId") Long groupId);
 }
