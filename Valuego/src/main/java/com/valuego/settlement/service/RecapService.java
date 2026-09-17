@@ -106,7 +106,7 @@ public class RecapService {
         );
     }
 
-    private String formatTravelPeriod(LocalDateTime startDate, LocalDateTime endDate) {
+    public String formatTravelPeriod(LocalDateTime startDate, LocalDateTime endDate) {
         if (startDate == null || endDate == null) return "-";
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
         return String.format("%s - %s", startDate.format(formatter), endDate.format(formatter));

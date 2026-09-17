@@ -2,6 +2,7 @@ package com.valuego.settlement.api;
 
 import com.valuego.global.common.code.SuccessCode;
 import com.valuego.global.common.template.ApiResTemplate;
+import com.valuego.settlement.api.dto.response.PastSettlementResDto;
 import com.valuego.settlement.api.dto.response.SettlementRecapResDto;
 import com.valuego.settlement.api.dto.response.SettlementResDto;
 import com.valuego.settlement.service.RecapService;
@@ -12,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -52,6 +54,13 @@ public class SettlementController {
             @CookieValue(value = "guestAccessToken", required = false) String guestToken) {
 
         SettlementRecapResDto response = recapService.getSettlementRecap(principal, groupId, guestToken);
+        return ApiResTemplate.successResponse(SuccessCode.GET_SUCCESS, response);
+    }
+
+    @Operation(summary = "지난 정산 내역 목록 조회", description = "카카오 로그인 사용자가 참여한 그룹 중 정산 확정이 완료된 지난 정산 내역 목록을 최신순으로 조회합니다.")
+    @GetMapping("/history")
+    public ApiResTemplate<List<PastSettlementResDto>> getPastSettlements(Principal principal) {
+        List<PastSettlementResDto> response = settlementService.getPastSettlements(principal);
         return ApiResTemplate.successResponse(SuccessCode.GET_SUCCESS, response);
     }
 }

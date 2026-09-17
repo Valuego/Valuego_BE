@@ -10,10 +10,12 @@ import com.valuego.global.common.exception.EntityFinderException;
 import com.valuego.global.common.exception.ValidMemberException;
 import com.valuego.groups.entity.Group;
 import com.valuego.groups.entity.GroupMember;
+import com.valuego.settlement.api.dto.response.PastSettlementResDto;
 import com.valuego.settlement.api.dto.response.SettlementResDto;
 import com.valuego.settlement.api.dto.response.SettlementResDto.*;
 import com.valuego.settlement.entity.Settlement;
 import com.valuego.settlement.entity.repository.SettlementRepository;
+import com.valuego.users.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +36,7 @@ public class SettlementService {
     private final ExpensePayerRepository expensePayerRepository;
     private final EntityFinderException entityFinderException;
     private final ValidMemberException validMemberException;
+    private final RecapService recapService;
 
     // 통합 정산표 조회
     public SettlementResDto getIntegratedSettlement(Principal principal, Long groupId, String guestToken) {
@@ -198,5 +201,35 @@ public class SettlementService {
         // 해당 멤버의 확인 도장 등록 (모든 멤버 수 달성 시 isConfirmed = true 변환)
         settlement.confirmMember(currentMember.getId(), memberCount, totalExpense, expensePerMember);
         settlementRepository.save(settlement);
+    }
+
+    // 지난 정산 내역 조회
+    public List<PastSettlementResDto> getPastSettlements(Principal principal) {
+        User user = entityFinderException.getUserFromPrincipal(principal);
+
+        // 확정 완료된 Settlement 리스트 조회
+        List<Settlement> settlements = settlementRepository.findConfirmedSettlementsByLeaderId(user.getId());
+
+        List<PastSettlementResDto> responseList = new ArrayList<>();
+
+        for (Settlement settlement : settlements) {
+            Group group = settlement.getGroup();
+
+            String travelPeriod = recapService.formatTravelPeriod(group.getStartDate(), group.getEndDate());
+
+            BigDecimal totalExpense = BigDecimal.valueOf(settlement.getTotalExpense());
+            BigDecimal expensePerMember = BigDecimal.valueOf(settlement.getExpensePerMember());
+
+            responseList.add(PastSettlementResDto.of(
+                    group.getId(),
+                    settlement.getId(),
+                    group.getTitle(),
+                    travelPeriod,
+                    totalExpense,
+                    expensePerMember
+            ));
+        }
+
+        return responseList;
     }
 }
