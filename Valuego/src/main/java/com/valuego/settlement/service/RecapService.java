@@ -54,15 +54,23 @@ public class RecapService {
         Map<GroupMember, List<Effort>> effortsByTarget = efforts.stream()
                 .collect(Collectors.groupingBy(Effort::getTargetMember));
 
-        long totalEffortSum = 0L;
+        BigDecimal totalEffortAmount = BigDecimal.ZERO;
         for (List<Effort> targetEfforts : effortsByTarget.values()) {
-            double avgAmount = targetEfforts.stream()
-                    .mapToLong(Effort::getEffortAmount)
-                    .average()
-                    .orElse(0.0);
-            totalEffortSum += Math.round(avgAmount / 100.0) * 100;
+            if (targetEfforts.isEmpty()) continue;
+
+            BigDecimal effortSum = targetEfforts.stream()
+                    .map(Effort::getEffortAmount)
+                    .map(BigDecimal::valueOf)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            // 평균 계산 및 100원 단위 반올림 (scale: -2, HALF_UP)
+            BigDecimal roundedAverage = effortSum.divide(
+                    BigDecimal.valueOf(targetEfforts.size()),
+                    -2,
+                    RoundingMode.HALF_UP
+            );
+            totalEffortAmount = totalEffortAmount.add(roundedAverage);
         }
-        BigDecimal totalEffortAmount = BigDecimal.valueOf(totalEffortSum);
 
         // 3. 게임 요약
         List<Game> games = gameRepository.findByGroupId(groupId);
