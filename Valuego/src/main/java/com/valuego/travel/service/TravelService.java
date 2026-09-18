@@ -19,6 +19,7 @@ import com.valuego.travel.api.dto.request.AiScheduleUpdateReqDto;
 import com.valuego.travel.api.dto.request.TravelPlaceCreateReqDto;
 import com.valuego.travel.api.dto.request.TravelPlaceUpdateReqDto;
 import com.valuego.travel.api.dto.response.AiScheduleUpdateResDto;
+import com.valuego.travel.api.dto.response.NaverBlogResDto;
 import com.valuego.travel.api.dto.response.TravelPlaceInfoResDto;
 import com.valuego.travel.entity.Travel;
 import com.valuego.travel.entity.TravelDay;
@@ -47,6 +48,7 @@ public class TravelService {
     private final GeminiService geminiService;
     private final GroupStyleService groupStyleService;
     private final ObjectMapper objectMapper;
+    private final NaverBlogService naverBlogService;
 
     // 전체 일정 조회
     public TravelScheduleResDto getAllSchedule(Principal principal, Long groupId, String guestToken) {
@@ -69,7 +71,14 @@ public class TravelService {
 
         TourPlace liveData = tourApiService.getPlaceDetail(travelPlace.getContentId());
 
-        return TravelPlaceInfoResDto.of(travelPlace, liveData);
+        String placeName = (travelPlace.getCustomName() != null && !travelPlace.getCustomName().isBlank())
+                ? travelPlace.getCustomName()
+                : (liveData != null ? liveData.getName() : "여행지");
+
+        String address = (liveData != null) ? liveData.getAddress() : null;
+        NaverBlogResDto blogReviews = naverBlogService.getPlaceBlogReviews(placeName, address);
+
+        return TravelPlaceInfoResDto.of(travelPlace, liveData, blogReviews);
     }
 
     // 일정 확정
