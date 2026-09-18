@@ -20,9 +20,10 @@ public record TravelPlaceInfoResDto(
         String memoUrl,
         Double latitude,
         Double longitude,
-        Double distanceFromPreviousKm
+        Double distanceFromPreviousKm,
+        NaverBlogResDto blogResDto
 ) {
-    public static TravelPlaceInfoResDto of(TravelPlace place, TourPlace liveData) {
+    public static TravelPlaceInfoResDto of(TravelPlace place, TourPlace liveData, NaverBlogResDto naverBlogResDto) {
         String displayName = (place.getCustomName() != null && !place.getCustomName().isBlank())
                 ? place.getCustomName()
                 : (liveData != null ? liveData.getName() : "장소 정보 없음");
@@ -40,7 +41,8 @@ public record TravelPlaceInfoResDto(
                 place.getMemoUrl(),
                 liveData != null ? liveData.getLatitude() : null,
                 liveData != null ? liveData.getLongitude() : null,
-                place.getDistanceFromPreviousKm()
+                place.getDistanceFromPreviousKm(),
+                naverBlogResDto
         );
     }
 
@@ -58,7 +60,8 @@ public record TravelPlaceInfoResDto(
                 place.getMemoUrl(),
                 null,
                 null,
-                place.getDistanceFromPreviousKm()
+                place.getDistanceFromPreviousKm(),
+                null
         );
     }
 }

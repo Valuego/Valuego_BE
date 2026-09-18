@@ -57,3 +57,8 @@ tour:
   api:
     service-key: ${TOUR_API_KEY}
     base-url: https://apis.data.go.kr/B551011/KorService2
+
+naver:
+  api:
+    client-id: ${NAVER_CLIENT_ID}
+    client-secret: ${NAVER_CLIENT_SECRET}
